@@ -1,8 +1,9 @@
 import { createClient, type GenericCtx } from "@convex-dev/better-auth";
 import { convex } from "@convex-dev/better-auth/plugins";
 import { betterAuth } from "better-auth/minimal";
+import { createAuthMiddleware } from "better-auth/api";
 
-import { components } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import type { DataModel } from "./_generated/dataModel";
 import { query } from "./_generated/server";
 import authConfig from "./auth.config";
@@ -33,6 +34,26 @@ function createAuth(ctx: GenericCtx<DataModel>) {
         jwksRotateOnTokenGenerationError: true,
       }),
     ],
+    hooks: {
+      after: createAuthMiddleware(async (bCtx) => {
+        // Check for both email sign-up and OAuth callback paths
+        if (bCtx.path?.startsWith("/sign-up") || bCtx.path?.startsWith("/callback")) {
+          const newSession = bCtx.context.newSession;
+          
+          if (newSession) {
+            // Run the profile sync synchronously to ensure it completes before returning
+            // Convex mutations are very fast, so this minimal blocking is preferred
+            if ("runMutation" in ctx) {
+              await (ctx as any).runMutation(internal.users.syncUserProfile, {
+                authUserId: newSession.user.id,
+                name: newSession.user.name,
+                email: newSession.user.email,
+              });
+            }
+          }
+        }
+      }),
+    },
   });
 }
 

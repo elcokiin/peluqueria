@@ -19,6 +19,8 @@ import Header from "../components/header";
 
 import appCss from "../index.css?url";
 
+import MobileNav from "../components/mobile-nav";
+
 const getAuth = createServerFn({ method: "GET" }).handler(async () => {
   return await getToken();
 });
@@ -76,9 +78,12 @@ function RootDocument() {
           <HeadContent />
         </head>
         <body>
-          <div className="grid h-svh grid-rows-[auto_1fr]">
+          <div className="grid h-svh grid-rows-[auto_1fr_auto] sm:grid-rows-[auto_1fr]">
             <Header />
-            <Outlet />
+            <div className="overflow-y-auto">
+              <Outlet />
+            </div>
+            <MobileNav />
           </div>
           <Toaster richColors />
           <TanStackRouterDevtools position="bottom-left" />

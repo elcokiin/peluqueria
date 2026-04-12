@@ -10,7 +10,7 @@ export default function Header() {
   
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-14 max-w-screen-2xl items-center justify-between px-4">
+      <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4">
         <Link to="/" className="flex items-center gap-2 font-bold">
           <span className="text-xl">Peluquería</span>
         </Link>
@@ -18,7 +18,9 @@ export default function Header() {
         <div className="flex flex-1 items-center justify-end gap-4">
           {!isLoading && (
             user ? (
-              <UserMenu />
+              <div className="hidden sm:block">
+                <UserMenu />
+              </div>
             ) : (
               <div className="w-fit">
                 <GoogleAuthButton mode="signin" />

@@ -13,13 +13,13 @@ function HomeComponent() {
     <main className="flex flex-1 flex-col items-center justify-center p-4">
       <div className="flex flex-col items-center space-y-4 text-center">
         <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl">
-          Hello World
+          Hola Mundo
         </h1>
         <p className="max-w-[400px] text-muted-foreground">
           {user ? (
-            <span>Welcome back, <span className="font-medium text-foreground">{user.name}</span>! Ready for your next appointment?</span>
+            <span>¡Bienvenido de nuevo, <span className="font-medium text-foreground">{user.name}</span>! ¿Listo para tu próxima cita?</span>
           ) : (
-            "Book your next haircut with ease. Sign in to get started."
+            "Reserva tu próximo corte de pelo con facilidad. Inicia sesión para comenzar."
           )}
         </p>
       </div>

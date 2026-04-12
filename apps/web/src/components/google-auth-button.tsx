@@ -18,7 +18,7 @@ export function GoogleAuthButton({
       });
     } catch (error) {
       console.error(error);
-      toast.error("An error occurred during Google authentication.");
+      toast.error("Ocurrió un error durante la autenticación de Google.");
       setIsPending(false);
     }
   };
@@ -57,7 +57,7 @@ export function GoogleAuthButton({
           />
         </svg>
       )}
-      Continue with Google
+      Continuar con Google
     </Button>
   );
 }

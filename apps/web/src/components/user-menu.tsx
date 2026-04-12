@@ -6,15 +6,22 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@v1_peluqueria/ui/components/dropdown-menu";
-import { useQuery } from "convex/react";
-import { LogOut, User } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
+import { LogOut, User, Shield } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { useNavigate } from "@tanstack/react-router";
 
 export default function UserMenu() {
   const user = useQuery(api.auth.getCurrentUser);
+  const profile = useQuery(api.users.currentProfile);
+  const switchActiveRole = useMutation(api.users.switchActiveRole);
   const navigate = useNavigate();
 
   if (user === undefined) {
@@ -30,17 +37,27 @@ export default function UserMenu() {
       await authClient.signOut({
         fetchOptions: {
           onSuccess: () => {
-            toast.success("Signed out successfully");
+            toast.success("Sesión cerrada correctamente");
             navigate({ to: "/" });
           },
           onError: (error) => {
-            toast.error(error.error.message || "Failed to sign out");
+            toast.error(error.error.message || "Error al cerrar sesión");
           },
         },
       });
     } catch (error) {
       console.error(error);
-      toast.error("An error occurred during sign out.");
+      toast.error("Ocurrió un error al cerrar sesión.");
+    }
+  };
+
+  const handleRoleChange = async (newRole: "user" | "barber" | "admin") => {
+    try {
+      await switchActiveRole({ targetRole: newRole });
+      toast.success(`Rol cambiado a ${newRole === 'user' ? 'usuario' : newRole === 'barber' ? 'barbero' : 'admin'}`);
+      navigate({ to: newRole === "user" ? "/dashboard" : `/${newRole}` });
+    } catch (error: any) {
+      toast.error(error.message || "Error al cambiar el rol");
     }
   };
 
@@ -51,7 +68,7 @@ export default function UserMenu() {
           {user.image ? (
             <img 
               src={user.image} 
-              alt={user.name || "User avatar"} 
+              alt={user.name || "Avatar de usuario"} 
               className="h-full w-full object-cover border rounded-full" 
             />
           ) : (
@@ -67,11 +84,38 @@ export default function UserMenu() {
           <p className="text-xs leading-none text-muted-foreground truncate">
             {user.email}
           </p>
+          {profile && profile.role !== "user" && (
+            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mt-1">
+              ROL: {profile.activeRole === 'user' ? 'usuario' : profile.activeRole === 'barber' ? 'barbero' : 'admin'}
+            </p>
+          )}
         </div>
         <DropdownMenuSeparator />
+        
+        {profile && (profile.role === "admin" || profile.role === "barber") && (
+          <>
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Shield className="mr-2 h-4 w-4" />
+                <span>Cambiar Rol</span>
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent>
+                <DropdownMenuRadioGroup value={profile.activeRole} onValueChange={(value) => handleRoleChange(value as any)}>
+                  <DropdownMenuRadioItem value="user">Usuario</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="barber">Barbero</DropdownMenuRadioItem>
+                  {profile.role === "admin" && (
+                    <DropdownMenuRadioItem value="admin">Administrador</DropdownMenuRadioItem>
+                  )}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+          </>
+        )}
+
         <DropdownMenuItem onClick={handleSignOut} className="text-red-500 focus:text-red-500 focus:bg-red-50 dark:focus:bg-red-950/50 cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
-          <span>Sign out</span>
+          <span>Cerrar sesión</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
