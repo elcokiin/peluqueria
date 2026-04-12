@@ -5,7 +5,6 @@
     "": {
       "name": "v1_peluqueria",
       "dependencies": {
-        "@v1_peluqueria/env": "workspace:*",
         "dotenv": "catalog:",
         "zod": "catalog:",
       },
@@ -29,7 +28,6 @@
         "@tanstack/react-start": "^1.141.1",
         "@tanstack/router-plugin": "^1.141.1",
         "@v1_peluqueria/backend": "workspace:*",
-        "@v1_peluqueria/env": "workspace:*",
         "@v1_peluqueria/ui": "workspace:*",
         "better-auth": "catalog:",
         "convex": "catalog:",
@@ -77,19 +75,6 @@
     "packages/config": {
       "name": "@v1_peluqueria/config",
       "version": "0.0.0",
-    },
-    "packages/env": {
-      "name": "@v1_peluqueria/env",
-      "version": "0.0.0",
-      "dependencies": {
-        "@t3-oss/env-core": "^0.13.1",
-        "dotenv": "catalog:",
-        "zod": "catalog:",
-      },
-      "devDependencies": {
-        "@v1_peluqueria/config": "workspace:*",
-        "typescript": "^5",
-      },
     },
     "packages/ui": {
       "name": "@v1_peluqueria/ui",
@@ -442,8 +427,6 @@
 
     "@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 
-    "@t3-oss/env-core": ["@t3-oss/env-core@0.13.11", "", { "peerDependencies": { "arktype": "^2.1.0", "typescript": ">=5.0.0", "valibot": "^1.0.0-beta.7 || ^1.0.0", "zod": "^3.24.0 || ^4.0.0" }, "optionalPeers": ["arktype", "typescript", "valibot", "zod"] }, "sha512-sM7GYY+KL7H/Hl0BE0inWfk3nRHZOLhmVn7sHGxaZt9FAR6KqREXAE+6TqKfiavfXmpRxO/OZ2QgKRd+oiBYRQ=="],
-
     "@tailwindcss/node": ["@tailwindcss/node@4.2.2", "", { "dependencies": { "@jridgewell/remapping": "^2.3.5", "enhanced-resolve": "^5.19.0", "jiti": "^2.6.1", "lightningcss": "1.32.0", "magic-string": "^0.30.21", "source-map-js": "^1.2.1", "tailwindcss": "4.2.2" } }, "sha512-pXS+wJ2gZpVXqFaUEjojq7jzMpTGf8rU6ipJz5ovJV6PUGmlJ+jvIwGrzdHdQ80Sg+wmQxUFuoW1UAAwHNEdFA=="],
 
     "@tailwindcss/oxide": ["@tailwindcss/oxide@4.2.2", "", { "optionalDependencies": { "@tailwindcss/oxide-android-arm64": "4.2.2", "@tailwindcss/oxide-darwin-arm64": "4.2.2", "@tailwindcss/oxide-darwin-x64": "4.2.2", "@tailwindcss/oxide-freebsd-x64": "4.2.2", "@tailwindcss/oxide-linux-arm-gnueabihf": "4.2.2", "@tailwindcss/oxide-linux-arm64-gnu": "4.2.2", "@tailwindcss/oxide-linux-arm64-musl": "4.2.2", "@tailwindcss/oxide-linux-x64-gnu": "4.2.2", "@tailwindcss/oxide-linux-x64-musl": "4.2.2", "@tailwindcss/oxide-wasm32-wasi": "4.2.2", "@tailwindcss/oxide-win32-arm64-msvc": "4.2.2", "@tailwindcss/oxide-win32-x64-msvc": "4.2.2" } }, "sha512-qEUA07+E5kehxYp9BVMpq9E8vnJuBHfJEC0vPC5e7iL/hw7HR61aDKoVoKzrG+QKp56vhNZe4qwkRmMC0zDLvg=="],
@@ -577,8 +560,6 @@
     "@v1_peluqueria/backend": ["@v1_peluqueria/backend@workspace:packages/backend"],
 
     "@v1_peluqueria/config": ["@v1_peluqueria/config@workspace:packages/config"],
-
-    "@v1_peluqueria/env": ["@v1_peluqueria/env@workspace:packages/env"],
 
     "@v1_peluqueria/ui": ["@v1_peluqueria/ui@workspace:packages/ui"],
 

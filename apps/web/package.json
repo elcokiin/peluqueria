@@ -19,7 +19,6 @@
     "@tanstack/react-start": "^1.141.1",
     "@tanstack/router-plugin": "^1.141.1",
     "@v1_peluqueria/backend": "workspace:*",
-    "@v1_peluqueria/env": "workspace:*",
     "@v1_peluqueria/ui": "workspace:*",
     "better-auth": "catalog:",
     "convex": "catalog:",

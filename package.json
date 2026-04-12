@@ -32,7 +32,6 @@
     "dev:setup": "turbo -F @v1_peluqueria/backend dev:setup"
   },
   "dependencies": {
-    "@v1_peluqueria/env": "workspace:*",
     "dotenv": "catalog:",
     "zod": "catalog:"
   },
