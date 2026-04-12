@@ -1,19 +1,14 @@
-import { z } from "zod";
+// We use a hardcoded config approach instead of environment variables
+// based on whether the app is running in production or development.
 
-const envSchema = z.object({
-  VITE_CONVEX_URL: z.string().url(),
-  VITE_CONVEX_SITE_URL: z.string().url(),
-});
+const isProduction = import.meta.env.PROD || (typeof process !== "undefined" && process.env.NODE_ENV === "production");
 
-// Use import.meta.env properties explicitly for client, and fallback to process.env for server runtime variables
-const parsedEnv = envSchema.safeParse({
-  VITE_CONVEX_URL: typeof process !== "undefined" && process.env.VITE_CONVEX_URL ? process.env.VITE_CONVEX_URL : import.meta.env.VITE_CONVEX_URL,
-  VITE_CONVEX_SITE_URL: typeof process !== "undefined" && process.env.VITE_CONVEX_SITE_URL ? process.env.VITE_CONVEX_SITE_URL : import.meta.env.VITE_CONVEX_SITE_URL,
-});
+export const env = {
+  VITE_CONVEX_URL: isProduction
+    ? "https://valiant-kiwi-952.convex.cloud" // Prod deployment
+    : "https://judicious-bullfrog-896.convex.cloud", // Dev deployment
+  VITE_CONVEX_SITE_URL: isProduction
+    ? "https://valiant-kiwi-952.convex.site" // Prod deployment
+    : "https://judicious-bullfrog-896.convex.site", // Dev deployment
+};
 
-if (!parsedEnv.success) {
-  console.error("Invalid environment variables:", parsedEnv.error.flatten().fieldErrors);
-  throw new Error("Invalid environment variables");
-}
-
-export const env = parsedEnv.data;
