@@ -5,10 +5,10 @@ const envSchema = z.object({
   VITE_CONVEX_SITE_URL: z.string().url(),
 });
 
-// Using import.meta.env properties explicitly so Vite can statically replace them during build
+// Use import.meta.env properties explicitly for client, and fallback to process.env for server runtime variables
 const parsedEnv = envSchema.safeParse({
-  VITE_CONVEX_URL: import.meta.env.VITE_CONVEX_URL,
-  VITE_CONVEX_SITE_URL: import.meta.env.VITE_CONVEX_SITE_URL,
+  VITE_CONVEX_URL: typeof process !== "undefined" && process.env.VITE_CONVEX_URL ? process.env.VITE_CONVEX_URL : import.meta.env.VITE_CONVEX_URL,
+  VITE_CONVEX_SITE_URL: typeof process !== "undefined" && process.env.VITE_CONVEX_SITE_URL ? process.env.VITE_CONVEX_SITE_URL : import.meta.env.VITE_CONVEX_SITE_URL,
 });
 
 if (!parsedEnv.success) {
