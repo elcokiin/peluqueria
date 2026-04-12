@@ -6,7 +6,7 @@
 - Responsive design for all screen sizes
 
 ## Tech Stack
-- Next.js with App Router
+- TanStack Start with TanStack Router
 - TypeScript
 - Tailwind CSS for styling
 
