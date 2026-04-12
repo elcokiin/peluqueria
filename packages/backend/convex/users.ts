@@ -240,3 +240,69 @@ export const getPendingBarbers = query({
     return await ctx.db.query("preapprovedBarbers").collect();
   }
 });
+// Admin ONLY: Set a barber's active status
+export const setBarberStatus = mutation({
+  args: { 
+    userId: v.id("users"),
+    isActive: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const authUser = await authComponent.safeGetAuthUser(ctx);
+    if (!authUser) throw new Error("Unauthorized");
+
+    const profile = await ctx.db
+      .query("users")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", authUser._id))
+      .unique();
+      
+    if (profile?.role !== "admin") {
+      throw new Error("Only admins can update barber status");
+    }
+
+    const targetUser = await ctx.db.get(args.userId);
+    if (!targetUser) throw new Error("User not found");
+
+    if (targetUser.role !== "barber" && targetUser.role !== "admin") {
+      throw new Error("Target user is not a barber");
+    }
+
+    await ctx.db.patch(args.userId, { isActive: args.isActive });
+    return { status: "updated" };
+  }
+});
+
+// Admin ONLY: Remove a barber (downgrade to user) or remove from pending
+export const removeBarber = mutation({
+  args: { 
+    id: v.union(v.id("users"), v.id("preapprovedBarbers")),
+    isPending: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const authUser = await authComponent.safeGetAuthUser(ctx);
+    if (!authUser) throw new Error("Unauthorized");
+
+    const profile = await ctx.db
+      .query("users")
+      .withIndex("by_authUserId", (q) => q.eq("authUserId", authUser._id))
+      .unique();
+      
+    if (profile?.role !== "admin") {
+      throw new Error("Only admins can remove barbers");
+    }
+
+    if (args.isPending) {
+      await ctx.db.delete(args.id as Id<"preapprovedBarbers">);
+    } else {
+      const targetUser = await ctx.db.get(args.id as Id<"users">);
+      if (!targetUser) throw new Error("User not found");
+      
+      if (targetUser.email && ADMINS_EMAILS.includes(targetUser.email)) {
+        throw new Error("Cannot remove super admin");
+      }
+
+      await ctx.db.patch(args.id as Id<"users">, { role: "user", activeRole: "user" });
+    }
+    
+    return { status: "removed" };
+  }
+});

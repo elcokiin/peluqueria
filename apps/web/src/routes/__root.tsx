@@ -86,7 +86,7 @@ function RootDocument() {
             <MobileNav />
           </div>
           <Toaster richColors />
-          <TanStackRouterDevtools position="bottom-left" />
+          <TanStackRouterDevtools position="top-right" />
           <Scripts />
         </body>
       </html>
