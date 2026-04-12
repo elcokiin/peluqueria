@@ -1,5 +1,4 @@
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
-import { Button } from "@v1_peluqueria/ui/components/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -62,9 +61,9 @@ export default function UserMenu() {
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full focus-visible:ring-0 focus-visible:ring-offset-0 p-0 overflow-hidden">
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger>
+        <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full focus-visible:ring-0 focus-visible:ring-offset-0 overflow-hidden border bg-muted hover:bg-muted/80 cursor-pointer">
           {user.image ? (
             <img 
               src={user.image} 
@@ -72,13 +71,13 @@ export default function UserMenu() {
               className="h-full w-full object-cover border rounded-full" 
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center rounded-full bg-muted border">
+            <span className="flex h-full w-full items-center justify-center rounded-full border">
               <User className="h-5 w-5 text-muted-foreground" />
-            </div>
+            </span>
           )}
-        </Button>
+        </span>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
+      <DropdownMenuContent className="w-56" align="end">
         <div className="flex flex-col space-y-1 p-2">
           <p className="text-sm font-medium leading-none">{user.name}</p>
           <p className="text-xs leading-none text-muted-foreground truncate">

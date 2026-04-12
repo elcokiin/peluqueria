@@ -10,4 +10,7 @@
 - TypeScript
 - Tailwind CSS for styling
 
+## Reference Code
+
+- cal.com: `/home/cokiin/Work/freelance/cal-com-reference`
 <!-- web-ai-end -->
