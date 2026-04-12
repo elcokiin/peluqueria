@@ -15,7 +15,12 @@ export const authComponent = createClient<DataModel>(components.betterAuth);
 function createAuth(ctx: GenericCtx<DataModel>) {
   return betterAuth({
     baseURL: siteUrl,
-    trustedOrigins: [siteUrl],
+    trustedOrigins: [
+      siteUrl,
+      "http://localhost:3001",
+      "https://barberstudio-bm.vercel.app",
+      "https://barberstudio.jdevs.me"
+    ],
     database: authComponent.adapter(ctx),
     emailAndPassword: {
       enabled: false,
