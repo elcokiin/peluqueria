@@ -1,8 +1,9 @@
 import { useQuery } from "convex/react";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
 import UserMenu from "./user-menu";
-import { Home, Calendar, Scissors, Settings, LayoutDashboard } from "lucide-react";
+import { Home, Calendar, Scissors, Settings, LayoutDashboard, User } from "lucide-react";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
+import { authClient } from "@/lib/auth-client";
 import { useEffect, useRef } from "react";
 
 export default function MobileNav() {
@@ -52,7 +53,7 @@ export default function MobileNav() {
 
       const dx = touchStart.current.x - touchEnd.current.x;
       const dy = touchStart.current.y - touchEnd.current.y;
-      
+
       const minSwipeDistance = 50;
 
       // Ensure mostly horizontal swipe
@@ -80,19 +81,19 @@ export default function MobileNav() {
 
   return (
     <div className="sm:hidden border-t bg-background flex items-center justify-around px-2 py-3 pb-safe">
-      <Link 
-        to="/" 
+      <Link
+        to="/"
         activeOptions={{ exact: true }}
         className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
       >
         <Home className="h-5 w-5" />
         <span className="text-[10px]">Inicio</span>
       </Link>
-      
+
       {/* Vista para Clientes (Usuarios regulares) */}
       {(!profile || role === "user") && (
-        <Link 
-          to="/dashboard" 
+        <Link
+          to="/dashboard"
           className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
         >
           <Calendar className="h-5 w-5" />
@@ -103,15 +104,15 @@ export default function MobileNav() {
       {/* Vista para Barberos */}
       {role === "barber" && (
         <>
-          <Link 
-            to="/dashboard" 
+          <Link
+            to="/dashboard"
             className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
           >
             <Calendar className="h-5 w-5" />
             <span className="text-[10px]">Agenda</span>
           </Link>
-          <Link 
-            to="/barber" 
+          <Link
+            to="/barber"
             className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
           >
             <Scissors className="h-5 w-5" />
@@ -123,16 +124,16 @@ export default function MobileNav() {
       {/* Vista para Administradores */}
       {role === "admin" && (
         <>
-          <Link 
-            to="/admin" 
+          <Link
+            to="/admin"
             activeOptions={{ exact: true }}
             className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
           >
             <LayoutDashboard className="h-5 w-5" />
             <span className="text-[10px]">Panel</span>
           </Link>
-          <Link 
-            to="/admin/services" 
+          <Link
+            to="/admin/services"
             className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
           >
             <Settings className="h-5 w-5" />
@@ -140,10 +141,20 @@ export default function MobileNav() {
           </Link>
         </>
       )}
-      
-      {!isLoading && profile && (
+
+      {!isLoading && (
         <div className="flex flex-col items-center gap-1">
-          <UserMenu />
+          {profile ? (
+            <UserMenu />
+          ) : (
+            <button
+              onClick={() => authClient.signIn.social({ provider: "google" })}
+              className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground transition-all"
+            >
+              <User className="h-5 w-5" />
+              <span className="text-[10px]">Ingresar</span>
+            </button>
+          )}
         </div>
       )}
     </div>
