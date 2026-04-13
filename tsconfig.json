@@ -1,3 +1,7 @@
 {
-  "extends": "@v1_peluqueria/config/tsconfig.base.json"
+  "extends": "@v1_peluqueria/config/tsconfig.base.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "files": []
 }
