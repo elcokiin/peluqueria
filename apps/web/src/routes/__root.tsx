@@ -11,6 +11,7 @@ import {
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { Toaster } from "sonner";
+import { ThemeProvider } from "@v1_peluqueria/ui/components/theme-provider";
 
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
@@ -59,28 +60,30 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 function RootDocument() {
   const context = useRouteContext({ from: Route.id });
   return (
-    <ConvexBetterAuthProvider
-      client={context.convexQueryClient.convexClient}
-      authClient={authClient}
-      initialToken={context.token}
-    >
-      <html lang="es" className="dark">
-        <head>
-          <HeadContent />
-        </head>
-        <body style={{ fontFamily: "'Inter', sans-serif" }}>
-          <div className="grid h-svh grid-rows-[auto_1fr_auto] sm:grid-rows-[auto_1fr]">
-            <Header />
-            <div className="overflow-y-auto">
-              <Outlet />
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+      <ConvexBetterAuthProvider
+        client={context.convexQueryClient.convexClient}
+        authClient={authClient}
+        initialToken={context.token}
+      >
+        <html lang="es" className="light">
+          <head>
+            <HeadContent />
+          </head>
+          <body style={{ fontFamily: "'Inter', sans-serif" }}>
+            <div className="grid h-svh grid-rows-[auto_1fr_auto] sm:grid-rows-[auto_1fr]">
+              <Header />
+              <div className="overflow-y-auto">
+                <Outlet />
+              </div>
+              <MobileNav />
             </div>
-            <MobileNav />
-          </div>
-          <Toaster richColors theme="dark" position="top-right" closeButton />
-          <TanStackRouterDevtools position="bottom-right" />
-          <Scripts />
-        </body>
-      </html>
-    </ConvexBetterAuthProvider>
+            <Toaster richColors theme="dark" position="top-right" closeButton />
+            <TanStackRouterDevtools position="bottom-right" />
+            <Scripts />
+          </body>
+        </html>
+      </ConvexBetterAuthProvider>
+    </ThemeProvider>
   );
 }
