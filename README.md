@@ -41,6 +41,39 @@ bun run dev
 Open [http://localhost:3001](http://localhost:3001) in your browser to see the web application.
 Your app will connect to the Convex cloud backend automatically.
 
+## Testing Notifications (Email)
+
+The cancellation and reschedule notifications are sent from Convex using Resend.
+
+1. Add these variables in `packages/backend/.env.local`:
+
+```dotenv
+RESEND_API_KEY=your_resend_api_key
+RESEND_FROM_EMAIL=your_verified_sender@example.com
+```
+
+2. Start backend and web:
+
+```bash
+bun run dev:server
+bun run dev:web
+```
+
+3. Use two accounts in the app:
+- Account A as client (creates a booking)
+- Account B as barber/admin (cancels or reschedules)
+
+4. Trigger notifications:
+- Cancel appointment in barber panel
+- Reschedule appointment in barber panel
+
+5. Verify delivery:
+- Check recipient inbox (and spam folder)
+- Check Resend dashboard activity/logs
+- Check Convex `notifications` table to confirm `success` or `error`
+
+If `RESEND_API_KEY` is missing, the app will skip sending and log the failure in `notifications`.
+
 ## UI Customization
 
 React web apps in this stack share shadcn/ui primitives through `packages/ui`.
