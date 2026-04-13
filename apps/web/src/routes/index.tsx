@@ -1,6 +1,6 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
 import { Facebook, Instagram, Globe, Plus } from "lucide-react";
 import { toast } from "sonner";
@@ -12,9 +12,19 @@ import { Badge } from "@v1_peluqueria/ui/components/badge";
 import { ScrollArea, ScrollBar } from "@v1_peluqueria/ui/components/scroll-area";
 import { Button } from "@v1_peluqueria/ui/components/button";
 import { Skeleton } from "@v1_peluqueria/ui/components/skeleton";
+import { DatePicker } from "@v1_peluqueria/ui/components/date-picker";
+import { Input } from "@v1_peluqueria/ui/components/input";
+import { Label } from "@v1_peluqueria/ui/components/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@v1_peluqueria/ui/components/sheet";
 
 export const Route = createFileRoute("/")({
-  component: HomeComponent,
+  component: RouteComponent,
 });
 
 function HomeComponent() {
@@ -94,6 +104,10 @@ function HomeComponent() {
           </h2>
           {barbers === undefined ? (
             <div className="flex gap-4"><Skeleton className="size-16 rounded-full" /><Skeleton className="size-16 rounded-full" /></div>
+          ) : barbers.length === 0 ? (
+            <div className="py-4 text-center text-sm text-muted-foreground">
+              No hay profesionales disponibles actualmente
+            </div>
           ) : (
             <ScrollArea className="w-full whitespace-nowrap pb-4">
               <div className="mr-4 flex gap-5 px-1">
@@ -180,5 +194,170 @@ function HomeComponent() {
         </div>
       </div>
     </div>
+  );
+}
+
+function BarberAppointmentsView() {
+  const now = new Date();
+  const [selectedDateObj, setSelectedDateObj] = useState<Date>(now);
+  
+  const dateStr = `${selectedDateObj.getFullYear()}-${String(selectedDateObj.getMonth() + 1).padStart(2, "0")}-${String(selectedDateObj.getDate()).padStart(2, "0")}`;
+  const [selectedDate, setSelectedDate] = useState(dateStr);
+  
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDateObj(date);
+      setSelectedDate(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`);
+    }
+  };
+
+  const appointments = useQuery(api.appointments.listAppointments, { date: selectedDate });
+  const cancelAppt = useMutation(api.appointments.cancelAppointment);
+  const closeAppt = useMutation(api.appointments.closeAppointment);
+
+  const [cancelId, setCancelId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+
+  const handleCancel = async () => {
+    if (!cancelId) return;
+    if (!cancelReason.trim()) { toast.error("El motivo de cancelación es obligatorio."); return; }
+    try {
+      await cancelAppt({ appointmentId: cancelId as any, reason: cancelReason });
+      toast.success("Cita cancelada. Se notificará al cliente.");
+      setCancelId(null); setCancelReason("");
+    } catch {
+      toast.error("No se pudo cancelar la cita.");
+    }
+  };
+
+  const handleClose = async (id: string) => {
+    try {
+      await closeAppt({ appointmentId: id as any, extraServiceIds: [] });
+      toast.success("Cita marcada como finalizada.");
+    } catch {
+      toast.error("No se pudo finalizar la cita.");
+    }
+  };
+
+  const statusBadge: Record<string, string> = {
+    scheduled: "bg-blue-500/15 text-blue-500",
+    cancelled: "bg-red-500/15 text-red-500",
+    closed: "bg-emerald-500/15 text-emerald-500",
+  };
+
+  const statusLabel: Record<string, string> = {
+    scheduled: "Agendada",
+    cancelled: "Cancelada",
+    closed: "Finalizada",
+  };
+
+  return (
+    <div className="space-y-4 px-4 pt-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[13px] font-semibold uppercase tracking-widest text-muted-foreground mb-0">Citas</p>
+        <DatePicker value={selectedDateObj} onChange={handleDateChange} className="h-8 w-[150px] text-xs" />
+      </div>
+
+      <Card className="overflow-hidden">
+        <CardContent className="p-0">
+          {appointments === undefined ? (
+            <div className="py-10 text-center text-sm text-muted-foreground">Cargando...</div>
+          ) : (appointments as any[]).length === 0 ? (
+            <div className="py-12 text-center text-[13px] text-muted-foreground border-dashed">
+              Sin citas para este día.
+            </div>
+          ) : (
+            <div className="divide-y divide-border/40">
+              {(appointments as any[]).map((app) => (
+                <div
+                  key={app._id}
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 transition-opacity ${app.status !== "scheduled" ? "opacity-50" : "hover:bg-muted/20"}`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-semibold tabular-nums">
+                        {new Date(app.startTime).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <span className={`text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full tracking-wider ${statusBadge[app.status] ?? ""}`}>
+                        {statusLabel[app.status] ?? app.status}
+                      </span>
+                    </div>
+                    <p className="text-[13px] text-muted-foreground">
+                      {app.clientName} &middot; {app.serviceName} &middot; {app.totalDuration} min
+                    </p>
+                  </div>
+
+                  {app.status === "scheduled" && (
+                    <div className="flex gap-2 shrink-0">
+                      <Button variant="outline" size="sm" className="h-8 text-[12px]" onClick={() => handleClose(app._id)}>
+                        Finalizar
+                      </Button>
+                      <Button variant="destructive" size="sm" className="h-8 text-[12px]" onClick={() => setCancelId(app._id)}>
+                        Cancelar
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Sheet open={!!cancelId} onOpenChange={(o) => { if (!o) { setCancelId(null); setCancelReason(""); } }}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-8">
+          <SheetHeader className="mb-5 text-left px-1">
+            <SheetTitle className="text-base font-semibold">Cancelar Cita</SheetTitle>
+            <SheetDescription className="text-[12px]">Se enviará un correo al cliente con el motivo indicado.</SheetDescription>
+          </SheetHeader>
+          <div className="space-y-4 px-1">
+            <div className="space-y-1.5">
+              <Label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide">
+                Motivo (obligatorio)
+              </Label>
+              <Input
+                placeholder="Ej. Emergencia personal, cierre inesperado..."
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                className="h-11 text-sm"
+              />
+            </div>
+            <Button variant="destructive" className="w-full h-11 text-sm font-medium" onClick={handleCancel}>
+              Confirmar cancelación
+            </Button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
+function RouteComponent() {
+  const profile = useQuery(api.users.currentProfile);
+
+  return (
+    <>
+      <Authenticated>
+        {profile === undefined ? (
+          <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
+            Cargando...
+          </div>
+        ) : (profile.role === "barber" || profile.role === "admin") ? (
+          <div className="max-w-xl mx-auto pb-28">
+            <BarberAppointmentsView />
+          </div>
+        ) : (
+          <HomeComponent />
+        )}
+      </Authenticated>
+      <Unauthenticated>
+        <HomeComponent />
+      </Unauthenticated>
+      <AuthLoading>
+        <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
+          Cargando...
+        </div>
+      </AuthLoading>
+    </>
   );
 }

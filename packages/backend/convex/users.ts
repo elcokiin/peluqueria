@@ -241,24 +241,6 @@ export const getPendingBarbers = query({
   }
 });
 
-// PUBLIC: Get all active barbers for the public scheduling UI
-export const getPublicBarbers = query({
-  args: {},
-  handler: async (ctx) => {
-    const allUsers = await ctx.db
-      .query("users")
-      .filter((q) => q.or(q.eq(q.field("role"), "barber"), q.eq(q.field("role"), "admin")))
-      .collect();
-
-    // Filter to active barbers and strip out sensitive data
-    return allUsers
-      .filter((u) => u.isActive !== false)
-      .map((u) => ({
-        _id: u._id,
-        name: u.name || "Barbero Adicional",
-      }));
-  }
-});
 // Admin ONLY: Set a barber's active status
 export const setBarberStatus = mutation({
   args: {

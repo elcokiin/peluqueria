@@ -1,7 +1,7 @@
 import { useQuery } from "convex/react";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
 import UserMenu from "./user-menu";
-import { Home, Calendar, Scissors, Settings, LayoutDashboard, User } from "lucide-react";
+import { Home, Scissors, Settings, LayoutDashboard, User, Calendar } from "lucide-react";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
 import { useEffect, useRef } from "react";
@@ -23,7 +23,7 @@ export default function MobileNav() {
     // Determine the available tabs based on the role
     const getRoutesForRole = (r: string) => {
       if (r === "admin") return ["/", "/admin", "/admin/services"];
-      if (r === "barber") return ["/", "/dashboard", "/barber"];
+      if (r === "barber") return ["/", "/barber"];
       return ["/", "/dashboard"];
     };
 
@@ -103,22 +103,13 @@ export default function MobileNav() {
 
       {/* Vista para Barberos */}
       {role === "barber" && (
-        <>
-          <Link
-            to="/dashboard"
-            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
-          >
-            <Calendar className="h-5 w-5" />
-            <span className="text-[10px]">Agenda</span>
-          </Link>
-          <Link
-            to="/barber"
-            className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
-          >
-            <Scissors className="h-5 w-5" />
-            <span className="text-[10px]">Menú</span>
-          </Link>
-        </>
+        <Link
+          to="/barber"
+          className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
+        >
+          <Scissors className="h-5 w-5" />
+          <span className="text-[10px]">Menú</span>
+        </Link>
       )}
 
       {/* Vista para Administradores */}
