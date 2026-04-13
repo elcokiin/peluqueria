@@ -13,7 +13,8 @@ export default function MobileNav() {
   const location = useLocation();
 
   // Determine active role (fallback to 'user' if not logged in yet)
-  const role = profile?.activeRole || profile?.role || "user";
+  const activeRole = profile?.activeRole;
+  const role = activeRole || profile?.role || "user";
 
   // Touch handlers for swipe navigation
   const touchStart = useRef<{ x: number; y: number } | null>(null);
@@ -80,7 +81,10 @@ export default function MobileNav() {
   }, [role, location.pathname, navigate]);
 
   return (
-    <div className="sm:hidden border-t bg-background flex items-center justify-around px-2 py-3 pb-safe">
+    <div
+      className="sm:hidden border-t bg-background flex items-center justify-around px-2 py-3 pb-safe"
+      data-active-role={role}
+    >
       <Link
         to="/"
         activeOptions={{ exact: true }}
