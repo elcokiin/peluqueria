@@ -12,6 +12,12 @@ import { GoogleAuthButton } from '@/components/google-auth-button';
 import { toast } from 'sonner';
 import { z } from 'zod';
 
+import avatar1 from '../../../assets/avatars/apple-avatar-1.jpeg';
+import avatar2 from '../../../assets/avatars/apple-avatar-2.jpeg';
+import avatar3 from '../../../assets/avatars/apple-avatar-3.jpeg';
+
+const AVATARS = [avatar1, avatar2, avatar3];
+
 const bookingSearchSchema = z.object({
   serviceId: z.string().optional(),
   date: z.string().optional(),
@@ -121,7 +127,7 @@ function BarberBookingComponent() {
     }
   };
 
-  if (services === undefined || barbers === undefined) {
+  if (barbers === undefined) {
     return (
       <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8">
         <Skeleton className="h-10 w-64 mb-2" />
@@ -144,53 +150,94 @@ function BarberBookingComponent() {
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header className="border-b pb-6">
-        <h1 className="text-3xl font-bold text-foreground">Agendar cita con {barber.name}</h1>
-        <p className="text-muted-foreground mt-2">Sigue los pasos a continuación para reservar tu turno.</p>
-      </header>
-
-      {/* Step 1: Services */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4 text-foreground">1. Selecciona un Servicio</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {services.map((service) => (
-            <button
-              key={service._id}
-              onClick={() => updateSearch({ serviceId: service._id, time: undefined })}
-              className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
-            >
-              <Card className={`transition-all h-full ${
-                selectedServiceId === service._id 
-                  ? 'border-primary ring-1 ring-primary bg-primary/5' 
-                  : 'hover:border-primary/50'
-              }`}>
-                <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-center">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="font-medium text-foreground">{service.name}</h3>
-                      <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {service.description || 'Sin descripción'}
-                      </p>
-                    </div>
-                    <div className="text-right ml-4 shrink-0">
-                      <div className="font-semibold text-foreground">${new Intl.NumberFormat('es-CL').format(service.price)}</div>
-                      <div className="text-xs text-muted-foreground">{service.duration} min</div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </button>
-          ))}
+      {/* Barber Carousel / Selection */}
+      <section className="border-b pb-6">
+        <h2 className="text-xl font-bold mb-4 text-foreground">1. Selecciona un Profesional</h2>
+        <div className="flex overflow-x-auto gap-4 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+          {barbers.map((b, index) => {
+            const isSelected = b._id === barber._id;
+            return (
+              <button
+                key={b._id}
+                onClick={() => navigate({ to: '/book/$barberId', params: { barberId: b._id } })}
+                className={`group flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all snap-start min-w-[100px] sm:min-w-[120px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                  isSelected 
+                    ? 'border-primary bg-primary/5' 
+                    : 'border-transparent bg-muted/30 hover:bg-muted/60 hover:border-primary/20'
+                }`}
+              >
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center overflow-hidden transition-all ${
+                  isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''
+                }`}>
+                  <img 
+                    src={AVATARS[index % AVATARS.length]} 
+                    alt={b.name}
+                    className={`w-full h-full object-cover transition-opacity ${isSelected ? 'opacity-100' : 'opacity-80 group-hover:opacity-100'}`}
+                  />
+                </div>
+                <span className={`text-sm font-medium text-center line-clamp-1 ${
+                  isSelected ? 'text-primary' : 'text-foreground'
+                }`}>
+                  {b.name}
+                </span>
+              </button>
+            );
+          })}
         </div>
-        {services.length === 0 && (
-          <p className="text-muted-foreground italic mt-4">Este barbero no tiene servicios disponibles aún.</p>
+      </section>
+
+      {/* Step 2: Services */}
+      <section>
+        <h2 className="text-xl font-semibold mb-4 text-foreground">2. Selecciona un Servicio</h2>
+        
+        {services === undefined ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Skeleton className="h-32 w-full rounded-xl" />
+            <Skeleton className="h-32 w-full rounded-xl" />
+          </div>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {services.map((service) => (
+                <button
+                  key={service._id}
+                  onClick={() => updateSearch({ serviceId: service._id, time: undefined })}
+                  className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+                >
+                  <Card className={`transition-all h-full ${
+                    selectedServiceId === service._id 
+                      ? 'border-primary ring-1 ring-primary bg-primary/5' 
+                      : 'hover:border-primary/50'
+                  }`}>
+                    <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-center">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium text-foreground">{service.name}</h3>
+                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                            {service.description || 'Sin descripción'}
+                          </p>
+                        </div>
+                        <div className="text-right ml-4 shrink-0">
+                          <div className="font-semibold text-foreground">${new Intl.NumberFormat('es-CL').format(service.price)}</div>
+                          <div className="text-xs text-muted-foreground">{service.duration} min</div>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </button>
+              ))}
+            </div>
+            {services.length === 0 && (
+              <p className="text-muted-foreground italic mt-4">Este barbero no tiene servicios disponibles aún.</p>
+            )}
+          </>
         )}
       </section>
 
-      {/* Step 2: Date & Time */}
+      {/* Step 3: Date & Time */}
       {selectedServiceId && (
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 pt-4 border-t">
-          <h2 className="text-xl font-semibold mb-4 text-foreground">2. Fecha y Hora</h2>
+          <h2 className="text-xl font-semibold mb-4 text-foreground">3. Fecha y Hora</h2>
           <Card className="bg-muted/30 border-dashed">
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-8">
@@ -261,7 +308,7 @@ function BarberBookingComponent() {
         </section>
       )}
 
-      {/* Step 3: Confirmation Dialog */}
+      {/* Step 4: Confirmation Dialog */}
       {selectedTime && selectedService && search.date && (
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 pt-4 border-t flex justify-end">
           <Dialog>
