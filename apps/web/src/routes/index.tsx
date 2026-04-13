@@ -1,4 +1,4 @@
-import { createFileRoute, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
@@ -23,11 +23,18 @@ import {
   SheetTitle,
 } from "@v1_peluqueria/ui/components/sheet";
 
+import avatar1 from '../../assets/avatars/apple-avatar-1.jpeg';
+import avatar2 from '../../assets/avatars/apple-avatar-2.jpeg';
+import avatar3 from '../../assets/avatars/apple-avatar-3.jpeg';
+
+const AVATARS = [avatar1, avatar2, avatar3];
+
 export const Route = createFileRoute("/")({
   component: RouteComponent,
 });
 
 function HomeComponent() {
+  const navigate = useNavigate();
   const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
 
   const barbers = useQuery(api.users.getPublicBarbers);
@@ -63,8 +70,8 @@ function HomeComponent() {
   const activeCategories = Object.entries(groupedServices).filter(([_, items]) => items.length > 0);
 
   return (
-    <div className="flex h-full w-full justify-center bg-slate-50 font-sans text-slate-900 pt-2 pb-6 dark:bg-background">
-      <div className="w-full max-w-md bg-slate-50 dark:bg-background h-full">
+    <div className="flex h-full w-full justify-center bg-background font-sans text-foreground pt-2 pb-6">
+      <div className="w-full max-w-md bg-background h-full">
         {/* Banner Hero */}
         <div className="p-4 pt-6">
           <Card className="relative w-full h-[220px] rounded-[1.25rem] overflow-hidden shadow-sm border-0">
@@ -115,7 +122,7 @@ function HomeComponent() {
 
         {/* Barber Selection */}
         <div className="mt-4 px-4">
-          <h2 className="mb-4 px-1 text-[14px] font-medium text-slate-800 dark:text-foreground">
+          <h2 className="mb-4 px-1 text-[14px] font-medium text-foreground">
             ¿Quieres agendar con un profesional en particular?
           </h2>
           {barbers === undefined ? (
@@ -125,31 +132,28 @@ function HomeComponent() {
               No hay profesionales disponibles actualmente
             </div>
           ) : (
-            <ScrollArea className="w-full whitespace-nowrap pb-4">
-              <div className="mr-4 flex gap-5 px-1">
-                {barbers.map((barber: any) => {
-                  const isSelected = selectedBarberId === barber._id;
-                  const initials = barber.name?.substring(0, 2).toUpperCase() || "BA";
-                  return (
-                    <button
-                      key={barber._id}
-                      className="group flex flex-col items-center gap-2 outline-none"
-                      onClick={() => setSelectedBarberId(isSelected ? null : barber._id)}
-                    >
-                      <Avatar className={`size-16 transition-all ${isSelected ? "ring-[2.5px] ring-primary ring-offset-2 ring-offset-background" : "group-hover:ring-2 group-hover:ring-primary/20"
-                        }`}>
-                        <AvatarImage src={`https://api.dicebear.com/9.x/initials/svg?seed=${barber._id}&backgroundColor=333333`} alt={barber.name} />
-                        <AvatarFallback>{initials}</AvatarFallback>
-                      </Avatar>
-                      <span className={`w-16 truncate text-center text-[13px] ${isSelected ? "font-semibold text-foreground" : "font-medium text-muted-foreground"}`}>
-                        {barber.name?.split(" ")[0]}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              <ScrollBar orientation="horizontal" className="hidden" />
-            </ScrollArea>
+            <div className="flex overflow-x-auto gap-4 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
+              {barbers.map((b: any, index: number) => {
+                return (
+                  <button
+                    key={b._id}
+                    onClick={() => navigate({ to: '/book/$barberId', params: { barberId: b._id } })}
+                    className={`group flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all snap-start min-w-[100px] sm:min-w-[120px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-transparent bg-muted/30 hover:bg-muted/60 hover:border-primary/20`}
+                  >
+                    <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden transition-all">
+                      <img 
+                        src={AVATARS[index % AVATARS.length]} 
+                        alt={b.name}
+                        className="w-full h-full object-cover transition-opacity opacity-80 group-hover:opacity-100"
+                      />
+                    </div>
+                    <span className="text-sm font-medium text-center line-clamp-1 text-foreground">
+                      {b.name}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           )}
         </div>
 

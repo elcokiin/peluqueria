@@ -19,8 +19,8 @@ export function useSwipeNavigation() {
     
     const getRoutesForRole = (r: string) => {
       if (r === "admin") return ["/", "/admin", "/admin/services"];
-      if (r === "barber") return ["/", "/dashboard", "/barber"];
-      return ["/", "/dashboard"];
+      if (r === "barber") return ["/", "/", "/barber"];
+      return ["/", "/"];
     };
 
     const routes = getRoutesForRole(role);

@@ -289,7 +289,7 @@ function RouteComponent() {
         {profile === undefined ? (
           <div className="flex h-screen items-center justify-center">Cargando perfil...</div>
         ) : !profile || profile.role !== "admin" ? (
-          <Navigate to="/dashboard" />
+          <Navigate to="/" />
         ) : (
           <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-8">
             <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Administración de Servicios</h1>
@@ -298,7 +298,7 @@ function RouteComponent() {
         )}
       </Authenticated>
       <Unauthenticated>
-        <Navigate to="/dashboard" />
+        <Navigate to="/" />
       </Unauthenticated>
       <AuthLoading>
         <div className="flex h-screen items-center justify-center">Cargando...</div>
