@@ -9,6 +9,7 @@ export function GoogleAuthButton({
   mode?: "signin" | "signup";
 }) {
   const [isPending, setIsPending] = useState(false);
+  const buttonLabel = mode === "signup" ? "Registrarme con Google" : "Continuar con Google";
 
   const handleGoogleAuth = async () => {
     try {
@@ -57,7 +58,7 @@ export function GoogleAuthButton({
           />
         </svg>
       )}
-      Continuar con Google
+      {buttonLabel}
     </Button>
   );
 }

@@ -10,15 +10,13 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
-import { Toaster } from "@v1_peluqueria/ui/components/sonner";
+import { Toaster } from "sonner";
 
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
 import Header from "../components/header";
-
 import appCss from "../index.css?url";
-
 import MobileNav from "../components/mobile-nav";
 
 const getAuth = createServerFn({ method: "GET" }).handler(async () => {
@@ -33,21 +31,17 @@ export interface RouterAppContext {
 export const Route = createRootRouteWithContext<RouterAppContext>()({
   head: () => ({
     meta: [
-      {
-        charSet: "utf-8",
-      },
-      {
-        name: "viewport",
-        content: "width=device-width, initial-scale=1",
-      },
-      {
-        title: "My App",
-      },
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "Barber Studio" },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap",
       },
     ],
   }),
@@ -58,10 +52,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     if (token) {
       ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
     }
-    return {
-      isAuthenticated: !!token,
-      token,
-    };
+    return { isAuthenticated: !!token, token };
   },
 });
 
@@ -73,11 +64,11 @@ function RootDocument() {
       authClient={authClient}
       initialToken={context.token}
     >
-      <html lang="en" className="dark">
+      <html lang="es" className="dark">
         <head>
           <HeadContent />
         </head>
-        <body>
+        <body style={{ fontFamily: "'Inter', sans-serif" }}>
           <div className="grid h-svh grid-rows-[auto_1fr_auto] sm:grid-rows-[auto_1fr]">
             <Header />
             <div className="overflow-y-auto">
@@ -85,8 +76,8 @@ function RootDocument() {
             </div>
             <MobileNav />
           </div>
-          <Toaster richColors />
-          <TanStackRouterDevtools position="top-right" />
+          <Toaster richColors theme="dark" position="top-right" closeButton />
+          <TanStackRouterDevtools position="bottom-right" />
           <Scripts />
         </body>
       </html>

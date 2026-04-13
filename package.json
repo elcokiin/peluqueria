@@ -36,6 +36,7 @@
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@types/node": "^24.3.0",
     "@v1_peluqueria/config": "workspace:*",
     "turbo": "^2.8.12",
     "typescript": "^5"
