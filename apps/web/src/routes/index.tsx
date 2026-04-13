@@ -67,31 +67,47 @@ function HomeComponent() {
       <div className="w-full max-w-md bg-slate-50 dark:bg-background h-full">
         {/* Banner Hero */}
         <div className="p-4 pt-6">
-          <Card className="relative w-full h-[180px] rounded-[1.25rem] overflow-hidden shadow-sm border-0">
+          <Card className="relative w-full h-[220px] rounded-[1.25rem] overflow-hidden shadow-sm border-0">
             <img
               src="https://images.unsplash.com/photo-1585747860715-2ba37e788b70?w=800&q=80"
               alt="Barber banner"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-black/10" />
+            <div className="absolute inset-0 bg-black/60" />
 
-            {/* Social Icons */}
-            <div className="absolute bottom-3 right-3 flex items-center gap-2">
-              <a href="#" className="flex size-8 items-center justify-center rounded-full bg-slate-800/80 text-white backdrop-blur-sm transition-colors hover:bg-slate-900">
-                <Facebook className="size-4" />
-              </a>
-              <a href="#" className="flex size-8 items-center justify-center rounded-full bg-slate-800/80 text-white backdrop-blur-sm transition-colors hover:bg-slate-900">
-                <Globe className="size-4" />
-              </a>
-              <a href="#" className="flex size-8 items-center justify-center rounded-full bg-slate-800/80 text-white backdrop-blur-sm transition-colors hover:bg-slate-900">
-                <Instagram className="size-4" />
-              </a>
+            {/* Barber info overlay */}
+            <div className="absolute bottom-4 left-4 right-4 flex w-full flex-col justify-end text-white">
+              <h1 className="text-xl font-bold leading-none tracking-tight">Kawz Barber Studio</h1>
+              <p className="mt-1 text-[13px] text-white/80 shrink-0">Admin: Brandon Molano</p>
+              
+              <div className="mt-2.5 flex items-center gap-4">
+                <a href="https://instagram.com/kawz_barberstudio" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[12px] font-medium text-white transition-colors hover:text-white/80">
+                  <Instagram className="size-4" />
+                  @kawz_barberstudio
+                </a>
+                <a href="https://facebook.com/search/top?q=BarberStudio%20BrandonMolano" target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[12px] font-medium text-white transition-colors hover:text-white/80">
+                  <Facebook className="size-4" />
+                  BarberStudio
+                </a>
+              </div>
             </div>
 
             {/* Barber logo */}
-            <Card className="absolute left-4 top-4 flex size-28 items-center justify-center rounded-[1.25rem] border-0 bg-white p-1.5 shadow-md">
-              <div className="flex size-full items-center justify-center rounded-xl bg-[#1A1A1A]">
-                <span className="text-center text-sm font-bold leading-tight tracking-tighter text-white">BARBER<br />SHOP</span>
+            <Card className="absolute left-4 top-4 flex size-20 items-center justify-center overflow-hidden rounded-2xl border-0 bg-transparent shadow-md">
+              <div className="flex size-full items-center justify-center overflow-hidden rounded-xl bg-black">
+                <img 
+                  src="/logo.jpg" 
+                  alt="Kawz Logo" 
+                  className="h-full w-full object-contain"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    const span = e.currentTarget.nextElementSibling as HTMLElement;
+                    if (span) span.style.display = 'block';
+                  }}
+                />
+                <span style={{ display: 'none' }} className="text-center text-[10px] font-bold leading-tight tracking-tighter text-white">
+                  KAWZ<br />BARBER<br/>STUDIO
+                </span>
               </div>
             </Card>
           </Card>
