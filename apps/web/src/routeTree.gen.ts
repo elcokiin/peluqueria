@@ -12,7 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as BarberRouteImport } from './routes/barber'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BookIndexRouteImport } from './routes/book/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as BookBarberIdRouteImport } from './routes/book/$barberId'
 import { Route as AdminServicesRouteImport } from './routes/admin/services'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -31,9 +33,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const BookIndexRoute = BookIndexRouteImport.update({
+  id: '/book/',
+  path: '/book/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/admin/',
   path: '/admin/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookBarberIdRoute = BookBarberIdRouteImport.update({
+  id: '/book/$barberId',
+  path: '/book/$barberId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminServicesRoute = AdminServicesRouteImport.update({
@@ -52,7 +64,9 @@ export interface FileRoutesByFullPath {
   '/barber': typeof BarberRoute
   '/dashboard': typeof DashboardRoute
   '/admin/services': typeof AdminServicesRoute
+  '/book/$barberId': typeof BookBarberIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/book/': typeof BookIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
@@ -60,7 +74,9 @@ export interface FileRoutesByTo {
   '/barber': typeof BarberRoute
   '/dashboard': typeof DashboardRoute
   '/admin/services': typeof AdminServicesRoute
+  '/book/$barberId': typeof BookBarberIdRoute
   '/admin': typeof AdminIndexRoute
+  '/book': typeof BookIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
@@ -69,7 +85,9 @@ export interface FileRoutesById {
   '/barber': typeof BarberRoute
   '/dashboard': typeof DashboardRoute
   '/admin/services': typeof AdminServicesRoute
+  '/book/$barberId': typeof BookBarberIdRoute
   '/admin/': typeof AdminIndexRoute
+  '/book/': typeof BookIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
@@ -79,7 +97,9 @@ export interface FileRouteTypes {
     | '/barber'
     | '/dashboard'
     | '/admin/services'
+    | '/book/$barberId'
     | '/admin/'
+    | '/book/'
     | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -87,7 +107,9 @@ export interface FileRouteTypes {
     | '/barber'
     | '/dashboard'
     | '/admin/services'
+    | '/book/$barberId'
     | '/admin'
+    | '/book'
     | '/api/auth/$'
   id:
     | '__root__'
@@ -95,7 +117,9 @@ export interface FileRouteTypes {
     | '/barber'
     | '/dashboard'
     | '/admin/services'
+    | '/book/$barberId'
     | '/admin/'
+    | '/book/'
     | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
@@ -104,7 +128,9 @@ export interface RootRouteChildren {
   BarberRoute: typeof BarberRoute
   DashboardRoute: typeof DashboardRoute
   AdminServicesRoute: typeof AdminServicesRoute
+  BookBarberIdRoute: typeof BookBarberIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  BookIndexRoute: typeof BookIndexRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
@@ -131,11 +157,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/book/': {
+      id: '/book/'
+      path: '/book'
+      fullPath: '/book/'
+      preLoaderRoute: typeof BookIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/': {
       id: '/admin/'
       path: '/admin'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book/$barberId': {
+      id: '/book/$barberId'
+      path: '/book/$barberId'
+      fullPath: '/book/$barberId'
+      preLoaderRoute: typeof BookBarberIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/services': {
@@ -160,7 +200,9 @@ const rootRouteChildren: RootRouteChildren = {
   BarberRoute: BarberRoute,
   DashboardRoute: DashboardRoute,
   AdminServicesRoute: AdminServicesRoute,
+  BookBarberIdRoute: BookBarberIdRoute,
   AdminIndexRoute: AdminIndexRoute,
+  BookIndexRoute: BookIndexRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport

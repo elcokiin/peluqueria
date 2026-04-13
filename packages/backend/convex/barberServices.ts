@@ -138,3 +138,30 @@ export const removeBarberService = mutation({
     await ctx.db.delete(args.barberServiceId);
   }
 });
+
+// 6. Get a barber's active services for public booking
+export const getPublicServices = query({
+  args: { barberId: v.id("users") },
+  handler: async (ctx, args) => {
+    const barberServices = await ctx.db
+      .query("barberServices")
+      .withIndex("by_barber", (q) => q.eq("barberId", args.barberId))
+      .filter((q) => q.eq(q.field("isActive"), true))
+      .collect();
+
+    const populatedServices = await Promise.all(
+      barberServices.map(async (bs) => {
+        const globalService = await ctx.db.get(bs.serviceId);
+        return {
+          ...bs,
+          name: globalService?.name || "Unknown Service",
+          description: globalService?.description,
+          isGlobalActive: globalService?.isActive ?? false,
+        };
+      })
+    );
+
+    // Filter out services where the global service is inactive
+    return populatedServices.filter((s) => s.isGlobalActive);
+  },
+});

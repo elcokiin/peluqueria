@@ -325,3 +325,48 @@ export const removeBarber = mutation({
     return { status: "removed" };
   }
 });
+
+// Public: Get all active barbers for booking
+export const getPublicBarbers = query({
+  args: {},
+  handler: async (ctx) => {
+    const barbers = await ctx.db
+      .query("users")
+      .filter((q) => 
+        q.and(
+          q.or(q.eq(q.field("role"), "barber"), q.eq(q.field("role"), "admin")),
+          q.neq(q.field("isActive"), false) // Allow true or undefined
+        )
+      )
+      .collect();
+
+    // Only return barbers that have at least one active service
+    const barbersWithServices = [];
+    
+    for (const barber of barbers) {
+      const barberServices = await ctx.db
+        .query("barberServices")
+        .withIndex("by_barber", (q) => q.eq("barberId", barber._id))
+        .collect();
+        
+      let hasActiveService = false;
+      for (const bs of barberServices) {
+        if (!bs.isActive) continue;
+        const globalService = await ctx.db.get(bs.serviceId);
+        if (globalService?.isActive) {
+          hasActiveService = true;
+          break;
+        }
+      }
+      
+      if (hasActiveService) {
+        barbersWithServices.push(barber);
+      }
+    }
+
+    return barbersWithServices.map(b => ({
+      _id: b._id,
+      name: b.name || "Unknown Barber",
+    }));
+  }
+});

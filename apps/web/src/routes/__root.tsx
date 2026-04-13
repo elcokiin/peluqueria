@@ -17,8 +17,8 @@ import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
 
 import Header from "../components/header";
-import appCss from "../index.css?url";
 import MobileNav from "../components/mobile-nav";
+import appCss from "../index.css?url";
 
 const getAuth = createServerFn({ method: "GET" }).handler(async () => {
   return await getToken();
@@ -60,17 +60,17 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 function RootDocument() {
   const context = useRouteContext({ from: Route.id });
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-      <ConvexBetterAuthProvider
-        client={context.convexQueryClient.convexClient}
-        authClient={authClient}
-        initialToken={context.token}
-      >
-        <html lang="es" className="light">
-          <head>
-            <HeadContent />
-          </head>
-          <body style={{ fontFamily: "'Inter', sans-serif" }}>
+    <html lang="es" suppressHydrationWarning>
+      <head suppressHydrationWarning>
+        <HeadContent />
+      </head>
+      <body style={{ fontFamily: "'Inter', sans-serif" }} suppressHydrationWarning>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+          <ConvexBetterAuthProvider
+            client={context.convexQueryClient.convexClient}
+            authClient={authClient}
+            initialToken={context.token}
+          >
             <div className="grid h-svh grid-rows-[auto_1fr_auto] sm:grid-rows-[auto_1fr]">
               <Header />
               <div className="overflow-y-auto">
@@ -80,10 +80,10 @@ function RootDocument() {
             </div>
             <Toaster richColors theme="dark" position="top-right" closeButton />
             <TanStackRouterDevtools position="bottom-right" />
-            <Scripts />
-          </body>
-        </html>
-      </ConvexBetterAuthProvider>
-    </ThemeProvider>
+          </ConvexBetterAuthProvider>
+        </ThemeProvider>
+        <Scripts />
+      </body>
+    </html>
   );
 }
