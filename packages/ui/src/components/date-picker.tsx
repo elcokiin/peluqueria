@@ -5,7 +5,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@v1_peluqueria/ui/components/popover"
-import { Button } from "@v1_peluqueria/ui/components/button"
 import { CalendarIcon } from "lucide-react"
 import { cn } from "@v1_peluqueria/ui/lib/utils"
 
@@ -44,10 +43,9 @@ function DatePicker({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="outline"
+        <span
           className={cn(
-            "w-full justify-start text-left font-normal",
+            "inline-flex h-9 shrink-0 items-center rounded-none border bg-background px-3 py-2 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border-input shadow-sm text-foreground w-full justify-start text-left font-normal",
             !value && "text-muted-foreground",
             className
           )}
@@ -60,7 +58,7 @@ function DatePicker({
                 day: "numeric",
               })
             : placeholder}
-        </Button>
+        </span>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto p-0">
         <Calendar

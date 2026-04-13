@@ -5,9 +5,9 @@ const isProduction = import.meta.env.PROD;
 
 export const env = {
   VITE_CONVEX_URL: isProduction
-    ? "https://rapid-caiman-847.convex.cloud" // Prod deployment
-    : "https://rapid-caiman-847.convex.cloud", // Dev deployment
+    ? "https://valiant-kiwi-952.convex.cloud" // Prod deployment
+    : "https://judicious-bullfrog-896.convex.cloud", // Dev deployment
   VITE_CONVEX_SITE_URL: isProduction
-    ? "https://rapid-caiman-847.convex.site" // Prod deployment
-    : "https://rapid-caiman-847.convex.site", // Dev deployment
+    ? "https://valiant-kiwi-952.convex.site" // Prod deployment
+    : "https://judicious-bullfrog-896.convex.site", // Dev deployment
 };
