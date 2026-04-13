@@ -13,6 +13,9 @@ export default defineConfig({
     nitro(),
     viteReact()
   ],
+  environments: {
+    ssr: { build: { rollupOptions: { input: "./server.ts" } } },
+  },
   server: {
     port: 3001,
   },
