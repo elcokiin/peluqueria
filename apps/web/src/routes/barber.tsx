@@ -14,6 +14,7 @@ import { Button } from "@v1_peluqueria/ui/components/button";
 import { Switch } from "@v1_peluqueria/ui/components/switch";
 import { Input } from "@v1_peluqueria/ui/components/input";
 import { Label } from "@v1_peluqueria/ui/components/label";
+import { DatePicker } from "@v1_peluqueria/ui/components/date-picker";
 import {
   Sheet,
   SheetContent,
@@ -481,9 +482,13 @@ function BarberBlocksTab() {
   const addBlock = useMutation(api.blocks.createBlock);
   const deleteBlock = useMutation(api.blocks.deleteBlock);
 
-  const [dateStr, setDateStr] = useState("");
+  const [selectedBlockDate, setSelectedBlockDate] = useState<Date | undefined>(undefined);
   const [start, setStart] = useState("");
   const [end, setEnd] = useState("");
+
+  const dateStr = selectedBlockDate
+    ? `${selectedBlockDate.getFullYear()}-${String(selectedBlockDate.getMonth() + 1).padStart(2, "0")}-${String(selectedBlockDate.getDate()).padStart(2, "0")}`
+    : "";
 
   const handleAdd = async () => {
     if (!dateStr) { toast.error("Selecciona una fecha para el bloqueo."); return; }
@@ -501,7 +506,7 @@ function BarberBlocksTab() {
     try {
       await addBlock({ date: dateStr, startMinute: startMins, endMinute: endMins });
       toast.success(startMins !== undefined ? `Rango ${minsToTime(startMins)}–${minsToTime(endMins!)} bloqueado el ${dateStr}.` : `${dateStr} bloqueado completamente.`);
-      setDateStr(""); setStart(""); setEnd("");
+      setSelectedBlockDate(undefined); setStart(""); setEnd("");
     } catch {
       toast.error("No se pudo crear el bloqueo.");
     }
@@ -527,7 +532,7 @@ function BarberBlocksTab() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="space-y-1">
                 <Label className="text-[11px] text-muted-foreground">Fecha</Label>
-                <Input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} className="h-10 text-sm" />
+                <DatePicker value={selectedBlockDate} onChange={setSelectedBlockDate} minDate={new Date()} className="h-10 text-sm" />
               </div>
               <div className="space-y-1">
                 <Label className="text-[11px] text-muted-foreground">Inicio (opcional)</Label>
@@ -578,8 +583,17 @@ function BarberBlocksTab() {
 // ─── Appointments Tab ─────────────────────────────────────────────────────────
 function BarberAppointmentsTab() {
   const now = new Date();
-  const localToday = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  const [selectedDate, setSelectedDate] = useState(localToday);
+  const [selectedDateObj, setSelectedDateObj] = useState<Date>(now);
+  
+  const dateStr = `${selectedDateObj.getFullYear()}-${String(selectedDateObj.getMonth() + 1).padStart(2, "0")}-${String(selectedDateObj.getDate()).padStart(2, "0")}`;
+  const [selectedDate, setSelectedDate] = useState(dateStr);
+  
+  const handleDateChange = (date: Date | undefined) => {
+    if (date) {
+      setSelectedDateObj(date);
+      setSelectedDate(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`);
+    }
+  };
 
   const appointments = useQuery(api.appointments.listAppointments, { date: selectedDate });
   const cancelAppt = useMutation(api.appointments.cancelAppointment);
@@ -625,7 +639,7 @@ function BarberAppointmentsTab() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className={sectionTitle + " mb-0"}>Citas</p>
-        <Input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="h-8 w-[150px] text-xs" />
+        <DatePicker value={selectedDateObj} onChange={handleDateChange} className="h-8 w-[150px] text-xs" />
       </div>
 
       <Card className="overflow-hidden">
