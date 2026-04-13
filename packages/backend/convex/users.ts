@@ -66,7 +66,7 @@ export const ensureProfile = mutation({
     if (!authUser) throw new Error("Not authenticated");
 
     const email = authUser.email.toLowerCase();
-    
+
     const existingUser = await ctx.db
       .query("users")
       .withIndex("by_authUserId", (q) => q.eq("authUserId", authUser._id))
@@ -102,7 +102,7 @@ export const ensureProfile = mutation({
       if (updated) {
         await ctx.db.patch(existingUser._id, updates);
       }
-      
+
       return existingUser._id;
     }
 
@@ -144,7 +144,7 @@ export const switchActiveRole = mutation({
       .query("users")
       .withIndex("by_authUserId", (q) => q.eq("authUserId", authUser._id))
       .unique();
-    
+
     if (!profile) throw new Error("Profile not found");
 
     // Enforce MAC:
@@ -174,7 +174,7 @@ export const addBarberByEmail = mutation({
       .query("users")
       .withIndex("by_authUserId", (q) => q.eq("authUserId", authUser._id))
       .unique();
-      
+
     if (profile?.role !== "admin") {
       throw new Error("Only admins can add barbers");
     }
@@ -186,7 +186,7 @@ export const addBarberByEmail = mutation({
         .query("preapprovedBarbers")
         .withIndex("by_email", (q) => q.eq("email", email))
         .unique();
-        
+
       if (!existingPreapproval) {
         await ctx.db.insert("preapprovedBarbers", { email });
       }
@@ -240,9 +240,28 @@ export const getPendingBarbers = query({
     return await ctx.db.query("preapprovedBarbers").collect();
   }
 });
+
+// PUBLIC: Get all active barbers for the public scheduling UI
+export const getPublicBarbers = query({
+  args: {},
+  handler: async (ctx) => {
+    const allUsers = await ctx.db
+      .query("users")
+      .filter((q) => q.or(q.eq(q.field("role"), "barber"), q.eq(q.field("role"), "admin")))
+      .collect();
+
+    // Filter to active barbers and strip out sensitive data
+    return allUsers
+      .filter((u) => u.isActive !== false)
+      .map((u) => ({
+        _id: u._id,
+        name: u.name || "Barbero Adicional",
+      }));
+  }
+});
 // Admin ONLY: Set a barber's active status
 export const setBarberStatus = mutation({
-  args: { 
+  args: {
     userId: v.id("users"),
     isActive: v.boolean(),
   },
@@ -254,7 +273,7 @@ export const setBarberStatus = mutation({
       .query("users")
       .withIndex("by_authUserId", (q) => q.eq("authUserId", authUser._id))
       .unique();
-      
+
     if (profile?.role !== "admin") {
       throw new Error("Only admins can update barber status");
     }
@@ -273,7 +292,7 @@ export const setBarberStatus = mutation({
 
 // Admin ONLY: Remove a barber (downgrade to user) or remove from pending
 export const removeBarber = mutation({
-  args: { 
+  args: {
     id: v.union(v.id("users"), v.id("preapprovedBarbers")),
     isPending: v.boolean(),
   },
@@ -285,7 +304,7 @@ export const removeBarber = mutation({
       .query("users")
       .withIndex("by_authUserId", (q) => q.eq("authUserId", authUser._id))
       .unique();
-      
+
     if (profile?.role !== "admin") {
       throw new Error("Only admins can remove barbers");
     }
@@ -295,14 +314,14 @@ export const removeBarber = mutation({
     } else {
       const targetUser = await ctx.db.get(args.id as Id<"users">);
       if (!targetUser) throw new Error("User not found");
-      
+
       if (targetUser.email && ADMINS_EMAILS.includes(targetUser.email)) {
         throw new Error("Cannot remove super admin");
       }
 
       await ctx.db.patch(args.id as Id<"users">, { role: "user", activeRole: "user" });
     }
-    
+
     return { status: "removed" };
   }
 });
