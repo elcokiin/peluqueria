@@ -159,3 +159,64 @@ export const getAvailableSlots = query({
         return availableSlots;
     },
 });
+
+/**
+ * Returns a list of available dates (YYYY-MM-DD) for a specific month.
+ * Fast check: only looks at the barber's weekly schedule and full-day blocks.
+ */
+export const getAvailableDaysMonth = query({
+    args: {
+        barberId: v.id("users"),
+        year: v.number(),
+        month: v.number(), // 1-12
+    },
+    handler: async (ctx, args) => {
+        // 1. Get the barber's weekly schedule
+        const schedule = await ctx.db
+            .query("barberSchedule")
+            .withIndex("by_barber", (q) => q.eq("barberId", args.barberId))
+            .collect();
+            
+        // Map of working days of the week (0 = Sunday, 1 = Monday, etc.)
+        const workingDaysOfWeek = new Set(schedule.map(s => s.dayOfWeek));
+
+        if (workingDaysOfWeek.size === 0) return []; // Barber has no schedule
+
+        // 2. Determine all days in the requested month
+        const daysInMonth = new Date(args.year, args.month, 0).getDate();
+        const availableDates: string[] = [];
+        
+        // 3. Get all blocks for this barber
+        const allBlocks = await ctx.db
+            .query("barberBlocks")
+            .withIndex("by_barber", (q) => q.eq("barberId", args.barberId))
+            .collect();
+            
+        // Filter blocks for this month that are FULL DAY
+        const fullDayBlocks = new Set(
+            allBlocks
+                .filter(b => b.startMinute === undefined || b.endMinute === undefined)
+                .map(b => b.date)
+        );
+
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${args.year}-${String(args.month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            
+            // Skip past days
+            if (dateStr < todayStr) continue;
+
+            const strictDate = new Date(Date.UTC(args.year, args.month - 1, day, 12, 0, 0));
+            const dayOfWeek = strictDate.getUTCDay();
+
+            // Check if they work this day of the week AND it's not a full day block
+            if (workingDaysOfWeek.has(dayOfWeek) && !fullDayBlocks.has(dateStr)) {
+                availableDates.push(dateStr);
+            }
+        }
+
+        return availableDates;
+    }
+});
