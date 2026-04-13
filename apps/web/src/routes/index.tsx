@@ -334,6 +334,9 @@ function BarberAppointmentsView() {
 
 function RouteComponent() {
   const profile = useQuery(api.users.currentProfile);
+  const activeRole = profile?.activeRole;
+
+  const showLanding = !activeRole || activeRole === "user";
 
   return (
     <>
@@ -342,12 +345,12 @@ function RouteComponent() {
           <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
             Cargando...
           </div>
-        ) : (profile.role === "barber" || profile.role === "admin") ? (
+        ) : showLanding ? (
+          <HomeComponent />
+        ) : (
           <div className="max-w-xl mx-auto pb-28">
             <BarberAppointmentsView />
           </div>
-        ) : (
-          <HomeComponent />
         )}
       </Authenticated>
       <Unauthenticated>
