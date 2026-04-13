@@ -1,15 +1,28 @@
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "convex/react";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
+import { useTheme } from "next-themes";
+import { Moon, Sun } from "lucide-react";
 import UserMenu from "./user-menu";
 import { GoogleAuthButton } from "./google-auth-button";
+import { useEffect, useState } from "react";
 
 export default function Header() {
   const user = useQuery(api.auth.getCurrentUser);
   const profile = useQuery(api.users.currentProfile);
   const isLoading = user === undefined || profile === undefined;
-  
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const role = profile?.activeRole || profile?.role || "user";
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
   
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -45,7 +58,20 @@ export default function Header() {
           </nav>
         </div>
 
-        <div className="flex flex-1 items-center justify-end gap-4">
+        <div className="flex flex-1 items-center justify-end gap-2">
+          {mounted && (
+            <button
+              onClick={toggleTheme}
+              className="flex items-center justify-center cursor-pointer"
+              aria-label="Cambiar tema"
+            >
+              {theme === "dark" ? (
+                <Sun className="h-5 w-5" />
+              ) : (
+                <Moon className="h-5 w-5" />
+              )}
+            </button>
+          )}
           {!isLoading && (
             user ? (
               <div className="hidden sm:block">
