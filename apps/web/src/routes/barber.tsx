@@ -592,7 +592,7 @@ function RouteComponent() {
             Cargando...
           </div>
         ) : !profile || (profile.role !== "barber" && profile.role !== "admin") ? (
-          <Navigate to="/dashboard" />
+          <Navigate to="/" />
         ) : (
           <div className="max-w-xl mx-auto px-4 py-8 space-y-10 pb-28">
             <div>
@@ -606,7 +606,7 @@ function RouteComponent() {
         )}
       </Authenticated>
       <Unauthenticated>
-        <Navigate to="/dashboard" />
+        <Navigate to="/" />
       </Unauthenticated>
       <AuthLoading>
         <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">

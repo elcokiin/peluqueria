@@ -54,7 +54,7 @@ export default function UserMenu() {
     try {
       await switchActiveRole({ targetRole: newRole });
       toast.success(`Rol cambiado a ${newRole === 'user' ? 'usuario' : newRole === 'barber' ? 'barbero' : 'admin'}`);
-      navigate({ to: newRole === "user" ? "/dashboard" : `/${newRole}` });
+      navigate({ to: newRole === "user" ? "/" : `/${newRole}` });
     } catch (error: any) {
       toast.error(error.message || "Error al cambiar el rol");
     }

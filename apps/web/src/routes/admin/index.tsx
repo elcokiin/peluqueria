@@ -90,7 +90,7 @@ function RouteComponent() {
         {profile === undefined ? (
           <div>Cargando perfil...</div>
         ) : profile?.role !== "admin" ? (
-          <Navigate to="/dashboard" />
+          <Navigate to="/" />
         ) : (
           <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-8">
             <section className="bg-card p-4 md:p-6 rounded-lg border">
@@ -252,7 +252,7 @@ function RouteComponent() {
         )}
       </Authenticated>
       <Unauthenticated>
-        <Navigate to="/dashboard" />
+        <Navigate to="/" />
       </Unauthenticated>
       <AuthLoading>
         <div>Cargando...</div>
