@@ -179,7 +179,7 @@ function BarberServicesTab() {
           <form onSubmit={handleSave} className="space-y-4 px-1">
             <div className="space-y-1.5">
               <Label className="text-[12px] font-medium text-muted-foreground uppercase tracking-wide">Servicio</Label>
-              <Select value={selectedServiceId} onValueChange={handleServiceSelect}>
+              <Select value={selectedServiceId} onValueChange={handleServiceSelect} items={globalServices.map((gs) => ({ value: gs._id, label: gs.name }))}>
                 <SelectTrigger className="h-11 text-sm">
                   <SelectValue placeholder="Selecciona un servicio..." />
                 </SelectTrigger>
