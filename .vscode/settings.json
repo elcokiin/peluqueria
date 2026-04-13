@@ -1,0 +1,12 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^cd /c/Users/juanj/OneDrive/Documentos/peluqueria && \\./node_modules/\\.bin/tsc -p packages/backend/convex/tsconfig\\.json --noEmit$/": {
+            "approve": true,
+            "matchCommandLine": true
+        },
+        "/^cd /c/Users/juanj/OneDrive/Documentos/peluqueria && \\./node_modules/\\.bin/tsc -p packages/ui/tsconfig\\.json --noEmit$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}

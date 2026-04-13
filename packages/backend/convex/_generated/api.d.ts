@@ -8,12 +8,18 @@
  * @module
  */
 
+import type * as appointments from "../appointments.js";
 import type * as auth from "../auth.js";
 import type * as barberServices from "../barberServices.js";
+import type * as blocks from "../blocks.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
+import type * as notifications from "../notifications.js";
+import type * as notificationsNode from "../notificationsNode.js";
 import type * as privateData from "../privateData.js";
+import type * as schedule from "../schedule.js";
 import type * as services from "../services.js";
+import type * as slots from "../slots.js";
 import type * as users from "../users.js";
 
 import type {
@@ -23,12 +29,18 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  appointments: typeof appointments;
   auth: typeof auth;
   barberServices: typeof barberServices;
+  blocks: typeof blocks;
   healthCheck: typeof healthCheck;
   http: typeof http;
+  notifications: typeof notifications;
+  notificationsNode: typeof notificationsNode;
   privateData: typeof privateData;
+  schedule: typeof schedule;
   services: typeof services;
+  slots: typeof slots;
   users: typeof users;
 }>;
 
