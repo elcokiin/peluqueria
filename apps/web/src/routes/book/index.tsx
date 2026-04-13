@@ -14,8 +14,8 @@ function BookIndexComponent() {
   const barbers = useQuery(api.users.getPublicBarbers);
 
   useEffect(() => {
-    // Auto-redirect if there is exactly 1 barber
-    if (barbers && barbers.length === 1) {
+    // Auto-redirect to the first barber if available
+    if (barbers && barbers.length > 0) {
       navigate({
         to: '/book/$barberId',
         params: { barberId: barbers[0]._id },
