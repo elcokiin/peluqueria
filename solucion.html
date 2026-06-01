@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Solucion Taller - Seguridad en PWA</title>
+  </head>
+  <body>
+    <main>
+      <h1>Solucion del Taller - Seguridad en PWA</h1>
+
+      <p>
+        Proyecto trabajado: <strong>Kawz Barber Studio</strong>, una PWA de reservas para barberia.
+        Despliegue de referencia: <a href="https://barberstudio-bm.vercel.app">https://barberstudio-bm.vercel.app</a>.
+      </p>
+
+      <p>
+        El taller se resolvio aplicando controles reales en la aplicacion y documentando las evidencias
+        de implementacion. Las capturas se guardaron en la carpeta <code>images/</code> y se referencian
+        en este documento.
+      </p>
+
+      <h2>Resumen de actividades implementadas</h2>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Actividad</th>
+            <th>Implementacion</th>
+            <th>Evidencia</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1. Certificados digitales SSL/TLS</td>
+            <td>Despliegue por HTTPS en Vercel, con HSTS y redireccion desde HTTP.</td>
+            <td>Imagenes 01, 03 y 04</td>
+          </tr>
+          <tr>
+            <td>2. Validacion y saneamiento de formularios</td>
+            <td>Validacion en cliente y servidor; normalizacion, limites de longitud, email, fechas, numeros y texto seguro.</td>
+            <td>Imagen 06</td>
+          </tr>
+          <tr>
+            <td>3. Content Security Policy</td>
+            <td>CSP con nonces por respuesta, hash SHA-256, <code>strict-dynamic</code>, tipos de recursos y bloqueo de objetos.</td>
+            <td>Imagenes 05 y 07</td>
+          </tr>
+          <tr>
+            <td>4. HTTPS obligatorio para recursos</td>
+            <td><code>upgrade-insecure-requests</code>, <code>Strict-Transport-Security</code> y redireccion 308 a HTTPS.</td>
+            <td>Imagenes 04 y 05</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h2>1. Certificados digitales SSL/TLS</h2>
+
+      <p>
+        La PWA esta desplegada en Vercel usando el dominio
+        <a href="https://barberstudio-bm.vercel.app">https://barberstudio-bm.vercel.app</a>.
+        Vercel entrega la aplicacion por HTTPS y gestiona el certificado TLS del dominio
+        <code>vercel.app</code>. Esto permite cifrar el trafico entre cliente y servidor.
+      </p>
+
+      <p>
+        Se verifico que el sitio responde por HTTPS y que el servidor envia
+        <code>Strict-Transport-Security</code>, lo que indica que los navegadores deben preferir HTTPS.
+      </p>
+
+      <figure>
+        <img src="images/01-https-vercel.png" alt="Captura de la PWA desplegada en HTTPS en Vercel">
+        <figcaption>Imagen 01. PWA desplegada mediante HTTPS en Vercel.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/03-headers-https.png" alt="Cabeceras HTTPS del despliegue en Vercel">
+        <figcaption>Imagen 03. Verificacion de cabeceras HTTPS/TLS del despliegue.</figcaption>
+      </figure>
+
+      <h2>2. Validacion y saneamiento de campos de formulario</h2>
+
+      <p>
+        Se agrego una capa central de saneamiento en Convex, ubicada en
+        <code>packages/backend/convex/security.ts</code>. Esta capa aplica:
+      </p>
+
+      <ul>
+        <li>Normalizacion Unicode con <code>NFKC</code>.</li>
+        <li>Eliminacion de caracteres de control.</li>
+        <li>Eliminacion de los caracteres <code>&lt;</code> y <code>&gt;</code> para reducir riesgo de inyeccion HTML/XSS.</li>
+        <li>Compactacion de espacios.</li>
+        <li>Limites de longitud por campo.</li>
+        <li>Validacion estricta de correos, fechas y numeros enteros.</li>
+      </ul>
+
+      <p>
+        Esta validacion se usa en mutaciones de servidor que reciben datos desde formularios:
+      </p>
+
+      <ul>
+        <li><code>packages/backend/convex/users.ts</code>: normalizacion y validacion del email de barberos.</li>
+        <li><code>packages/backend/convex/services.ts</code>: saneamiento de nombre y descripcion de servicios; validacion de precio y duracion.</li>
+        <li><code>packages/backend/convex/blocks.ts</code>: validacion de fecha y saneamiento de motivo de bloqueo.</li>
+        <li><code>packages/backend/convex/appointments.ts</code>: validacion de fecha y saneamiento del motivo de cancelacion.</li>
+      </ul>
+
+      <p>
+        Tambien se agrego validacion del lado cliente en formularios visibles:
+      </p>
+
+      <ul>
+        <li><code>apps/web/src/routes/admin/index.tsx</code>: email con patron, longitud maxima y normalizacion.</li>
+        <li><code>apps/web/src/routes/admin/services.tsx</code>: nombre, descripcion, precio y duracion.</li>
+        <li><code>apps/web/src/routes/index.tsx</code>: motivo de cancelacion saneado antes de enviarse.</li>
+      </ul>
+
+      <figure>
+        <img src="images/06-sanitizacion-convex.png" alt="Codigo de sanitizacion y validacion en Convex">
+        <figcaption>Imagen 06. Implementacion centralizada de validacion y saneamiento.</figcaption>
+      </figure>
+
+      <h2>3. Politicas de Seguridad de Contenido (CSP)</h2>
+
+      <p>
+        La CSP se implemento en <code>apps/web/server.ts</code>, envolviendo la respuesta generada por
+        TanStack Start. Para evitar romper la aplicacion con una politica estricta, el servidor genera
+        un <code>nonce</code> criptografico por respuesta y lo inyecta en las etiquetas
+        <code>&lt;script&gt;</code> del HTML.
+      </p>
+
+      <h3>3.1 Control de carga de recursos para prevenir XSS</h3>
+
+      <p>
+        Se definio <code>default-src 'self'</code> como politica por defecto y
+        <code>script-src</code> con nonce, hash y <code>strict-dynamic</code>. Esto evita que scripts
+        inyectados sin nonce o hash valido se ejecuten.
+      </p>
+
+      <pre><code>default-src 'self';
+script-src 'nonce-{valor-dinamico}' 'sha256-x1re2lJCbJLUlWV3fFbi1/CEPWb0ZexeffK5gyjy6bw=' 'strict-dynamic' https:;</code></pre>
+
+      <h3>3.2 Control por tipos de recursos</h3>
+
+      <p>La CSP separa los tipos de recursos principales:</p>
+
+      <ul>
+        <li><code>style-src</code>: permite estilos propios, estilos inline necesarios para la UI y Google Fonts.</li>
+        <li><code>img-src</code>: permite imagenes propias, <code>data:</code>, <code>blob:</code> y recursos HTTPS.</li>
+        <li><code>font-src</code>: permite fuentes propias, <code>data:</code> y <code>https://fonts.gstatic.com</code>.</li>
+        <li><code>connect-src</code>: permite conexiones propias, HTTPS y WebSocket seguro.</li>
+        <li><code>manifest-src</code> y <code>worker-src</code>: restringidos a <code>'self'</code>.</li>
+      </ul>
+
+      <h3>3.3 Bloqueo de objeto especifico</h3>
+
+      <p>
+        Se bloqueo la carga de objetos embebidos con <code>object-src 'none'</code>.
+        Esta directiva bloquea recursos como <code>&lt;object&gt;</code>, <code>&lt;embed&gt;</code>
+        y contenido plugin heredado que puede abrir vectores de ataque.
+      </p>
+
+      <h3>3.4 Hash para asegurar el origen de un script especifico</h3>
+
+      <p>
+        Se creo el archivo <code>apps/web/public/security-policy-marker.js</code> y se incluyo en el
+        documento con atributo <code>integrity</code>. Su hash SHA-256 tambien fue agregado a la CSP:
+      </p>
+
+      <pre><code>sha256-x1re2lJCbJLUlWV3fFbi1/CEPWb0ZexeffK5gyjy6bw=</code></pre>
+
+      <p>
+        De esta forma, el navegador solo acepta ese script especifico si el contenido coincide con
+        el hash declarado.
+      </p>
+
+      <h3>3.5 Politicas basadas en esquema o ubicacion</h3>
+
+      <p>
+        La politica combina origen propio, ubicaciones concretas y esquemas seguros:
+      </p>
+
+      <ul>
+        <li><code>'self'</code> para recursos propios.</li>
+        <li><code>https:</code> para imagenes y conexiones externas seguras.</li>
+        <li><code>https://fonts.googleapis.com</code> y <code>https://fonts.gstatic.com</code> para fuentes.</li>
+        <li><code>form-action 'self' https:</code> para limitar envios de formularios.</li>
+      </ul>
+
+      <h3>3.6 Control estricto y strict-dynamic</h3>
+
+      <p>
+        Se aplico una CSP estricta basada en nonce dinamico y hash. La directiva
+        <code>strict-dynamic</code> permite que la confianza del script con nonce/hash se propague a
+        scripts que ese script cargue de forma legitima, evitando depender unicamente de listas largas
+        de dominios.
+      </p>
+
+      <figure>
+        <img src="images/05-csp-headers.png" alt="Cabeceras CSP y HSTS del build local">
+        <figcaption>Imagen 05. Cabeceras de seguridad generadas por el build local.</figcaption>
+      </figure>
+
+      <figure>
+        <img src="images/07-implementacion-csp.png" alt="Codigo de implementacion CSP con nonce, hash y strict-dynamic">
+        <figcaption>Imagen 07. Implementacion de CSP estricta con nonce, hash y strict-dynamic.</figcaption>
+      </figure>
+
+      <h2>4. HTTPS obligatorio para recursos de la PWA</h2>
+
+      <p>
+        Se aplicaron tres mecanismos para mantener HTTPS obligatorio:
+      </p>
+
+      <ul>
+        <li><code>upgrade-insecure-requests</code> en CSP: actualiza recursos HTTP a HTTPS cuando es posible.</li>
+        <li><code>Strict-Transport-Security</code>: indica al navegador que use HTTPS para el dominio.</li>
+        <li>Redireccion 308 desde HTTP hacia HTTPS cuando la peticion llega con protocolo inseguro fuera de localhost.</li>
+      </ul>
+
+      <p>
+        El despliegue de Vercel tambien responde con redireccion desde HTTP hacia HTTPS, como se evidencia
+        en la siguiente captura.
+      </p>
+
+      <figure>
+        <img src="images/04-http-a-https.png" alt="Redireccion HTTP a HTTPS en Vercel">
+        <figcaption>Imagen 04. Redireccion HTTP a HTTPS mediante codigo 308.</figcaption>
+      </figure>
+
+      <h2>Resultado final</h2>
+
+      <p>
+        La PWA queda protegida con HTTPS/TLS, saneamiento de datos en cliente y servidor,
+        politicas CSP por tipo de recurso, bloqueo de objetos, hash de script, politicas por
+        esquema/ubicacion, CSP estricta con <code>strict-dynamic</code> y mecanismos para evitar
+        contenido mixto.
+      </p>
+
+      <figure>
+        <img src="images/02-app-local-segura.png" alt="PWA ejecutandose desde el build local con seguridad aplicada">
+        <figcaption>Imagen 02. Resultado final de la PWA ejecutada desde el build local seguro.</figcaption>
+      </figure>
+
+      <h2>Archivos modificados</h2>
+
+      <ul>
+        <li><code>apps/web/server.ts</code></li>
+        <li><code>apps/web/src/routes/__root.tsx</code></li>
+        <li><code>apps/web/public/security-policy-marker.js</code></li>
+        <li><code>apps/web/src/routes/admin/index.tsx</code></li>
+        <li><code>apps/web/src/routes/admin/services.tsx</code></li>
+        <li><code>apps/web/src/routes/index.tsx</code></li>
+        <li><code>packages/backend/convex/security.ts</code></li>
+        <li><code>packages/backend/convex/users.ts</code></li>
+        <li><code>packages/backend/convex/services.ts</code></li>
+        <li><code>packages/backend/convex/blocks.ts</code></li>
+        <li><code>packages/backend/convex/appointments.ts</code></li>
+      </ul>
+
+      <h2>Verificacion realizada</h2>
+
+      <ul>
+        <li><code>bun run --filter web build</code>: exitoso.</li>
+        <li><code>bunx tsc --noEmit --project packages/backend/convex/tsconfig.json</code>: exitoso.</li>
+        <li><code>bun run check-types</code>: no finalizo por errores preexistentes en <code>packages/ui</code>, no relacionados con este taller.</li>
+      </ul>
+    </main>
+  </body>
+</html>

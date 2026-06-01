@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { authComponent } from "./auth";
+import { assertPositiveInteger, sanitizeOptionalText, sanitizeText } from "./security";
 
 // Helper function to get current user profile
 async function getCurrentProfile(ctx: any) {
@@ -40,7 +41,17 @@ export const upsertService = mutation({
       throw new Error("Unauthorized");
     }
 
-    const { id, ...data } = args;
+    const name = sanitizeText(args.name, 80);
+    if (!name) throw new Error("Service name is required");
+
+    const data = {
+      name,
+      description: sanitizeOptionalText(args.description, 240),
+      defaultDuration: assertPositiveInteger(args.defaultDuration, "defaultDuration", 5, 480),
+      defaultPrice: assertPositiveInteger(args.defaultPrice, "defaultPrice", 0, 10000000),
+      isActive: args.isActive,
+    };
+    const { id } = args;
 
     if (id) {
       // Update

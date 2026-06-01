@@ -240,9 +240,16 @@ function BarberAppointmentsView() {
 
   const handleCancel = async () => {
     if (!cancelId) return;
-    if (!cancelReason.trim()) { toast.error("El motivo de cancelación es obligatorio."); return; }
+    const safeReason = cancelReason
+      .normalize("NFKC")
+      .replace(/[\u0000-\u001F\u007F]/g, " ")
+      .replace(/[<>]/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 500);
+    if (!safeReason) { toast.error("El motivo de cancelación es obligatorio."); return; }
     try {
-      await cancelAppt({ appointmentId: cancelId as any, reason: cancelReason });
+      await cancelAppt({ appointmentId: cancelId as any, reason: safeReason });
       toast.success("Cita cancelada. Se notificará al cliente.");
       setCancelId(null); setCancelReason("");
     } catch {
@@ -340,6 +347,8 @@ function BarberAppointmentsView() {
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 className="h-11 text-sm"
+                maxLength={500}
+                required
               />
             </div>
             <Button variant="destructive" className="w-full h-11 text-sm font-medium" onClick={handleCancel}>

@@ -24,6 +24,16 @@ import {
 } from "@v1_peluqueria/ui/components/dialog";
 import { toast } from "sonner";
 
+function sanitizeFormText(value: string, maxLength: number) {
+  return value
+    .normalize("NFKC")
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/[<>]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, maxLength);
+}
+
 export const Route = createFileRoute("/admin/services")({
   component: RouteComponent,
 });
@@ -82,17 +92,28 @@ function AdminServicesTab() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !defaultPrice || !defaultDuration) return;
+    const safeName = sanitizeFormText(name, 80);
+    const safeDescription = sanitizeFormText(description, 240);
+    if (!safeName || !defaultPrice || !defaultDuration) return;
 
     const numericPrice = Number(defaultPrice.replace(/\./g, ""));
+    const numericDuration = Number(defaultDuration);
+    if (!Number.isInteger(numericPrice) || numericPrice < 0 || numericPrice > 10000000) {
+      toast.error("El precio debe estar entre 0 y 10.000.000.");
+      return;
+    }
+    if (!Number.isInteger(numericDuration) || numericDuration < 5 || numericDuration > 480) {
+      toast.error("La duración debe estar entre 5 y 480 minutos.");
+      return;
+    }
 
     try {
       await upsertService({
         id: editingId as any || undefined,
-        name,
-        description,
+        name: safeName,
+        description: safeDescription,
         defaultPrice: numericPrice,
-        defaultDuration: Number(defaultDuration),
+        defaultDuration: numericDuration,
         isActive,
       });
       
@@ -148,6 +169,7 @@ function AdminServicesTab() {
                   value={name} 
                   onChange={(e) => setName(e.target.value)} 
                   placeholder="Ej: Corte Degradado (Fade)"
+                  maxLength={80}
                   required 
                 />
               </div>
@@ -159,6 +181,7 @@ function AdminServicesTab() {
                   value={description} 
                   onChange={(e) => setDescription(e.target.value)} 
                   placeholder="Breve descripción para el cliente" 
+                  maxLength={240}
                 />
               </div>
 
@@ -171,6 +194,7 @@ function AdminServicesTab() {
                     inputMode="numeric"
                     value={defaultPrice} 
                     onChange={handlePriceChange} 
+                    maxLength={12}
                     required 
                   />
                 </div>
@@ -179,7 +203,9 @@ function AdminServicesTab() {
                   <Input 
                     id="duration" 
                     type="number" 
-                    min="5" step="5" 
+                    min="5"
+                    max="480"
+                    step="5" 
                     value={defaultDuration} 
                     onChange={(e) => setDefaultDuration(e.target.value)} 
                     required 

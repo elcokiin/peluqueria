@@ -68,6 +68,12 @@ function RootDocument() {
     <html lang="es" suppressHydrationWarning>
       <head suppressHydrationWarning>
         <HeadContent />
+        <script
+          src="/security-policy-marker.js"
+          integrity="sha256-x1re2lJCbJLUlWV3fFbi1/CEPWb0ZexeffK5gyjy6bw="
+          crossOrigin="anonymous"
+          defer
+        />
       </head>
       <body style={{ fontFamily: "'Inter', sans-serif" }} suppressHydrationWarning>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>

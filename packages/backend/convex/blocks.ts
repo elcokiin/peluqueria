@@ -1,6 +1,7 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { authComponent } from "./auth";
+import { assertDateString, sanitizeOptionalText } from "./security";
 
 // ─── Helper ──────────────────────────────────────────────────────────────────
 
@@ -75,10 +76,7 @@ export const createBlock = mutation({
     handler: async (ctx, args) => {
         const profile = await requireBarberOrAdmin(ctx);
 
-        // Validate date format
-        if (!/^\d{4}-\d{2}-\d{2}$/.test(args.date)) {
-            throw new Error("date must be in YYYY-MM-DD format");
-        }
+        const date = assertDateString(args.date);
 
         // If partial block, validate minutes
         if (args.startMinute !== undefined || args.endMinute !== undefined) {
@@ -95,10 +93,10 @@ export const createBlock = mutation({
 
         return await ctx.db.insert("barberBlocks", {
             barberId: profile._id,
-            date: args.date,
+            date,
             startMinute: args.startMinute,
             endMinute: args.endMinute,
-            reason: args.reason,
+            reason: sanitizeOptionalText(args.reason, 240),
         });
     },
 });

@@ -2,6 +2,7 @@ import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
 import { authComponent } from "./auth";
 import type { Id } from "./_generated/dataModel";
+import { normalizeEmail, sanitizeOptionalText } from "./security";
 
 const ADMINS_EMAILS = process.env.ADMINS_EMAILS?.split(",")?.map(email => email.trim()) || [];
 
@@ -19,7 +20,7 @@ export const syncUserProfile = internalMutation({
 
     if (existingUser) return existingUser._id;
 
-    const email = args.email.toLowerCase();
+    const email = normalizeEmail(args.email);
     const isAdmin = ADMINS_EMAILS.includes(email);
     let role: "user" | "barber" | "admin" = isAdmin ? "admin" : "user";
 
@@ -38,7 +39,7 @@ export const syncUserProfile = internalMutation({
     // Create a new profile
     return await ctx.db.insert("users", {
       authUserId: args.authUserId,
-      name: args.name,
+      name: sanitizeOptionalText(args.name, 120),
       email: email,
       role,
       activeRole: role,
@@ -65,7 +66,7 @@ export const ensureProfile = mutation({
     const authUser = await authComponent.safeGetAuthUser(ctx);
     if (!authUser) throw new Error("Not authenticated");
 
-    const email = authUser.email.toLowerCase();
+    const email = normalizeEmail(authUser.email);
 
     const existingUser = await ctx.db
       .query("users")
@@ -124,7 +125,7 @@ export const ensureProfile = mutation({
     // Create a new profile
     return await ctx.db.insert("users", {
       authUserId: authUser._id,
-      name: authUser.name,
+      name: sanitizeOptionalText(authUser.name, 120),
       email: email,
       role,
       activeRole: role,
@@ -166,7 +167,7 @@ export const switchActiveRole = mutation({
 export const addBarberByEmail = mutation({
   args: { email: v.string() },
   handler: async (ctx, args) => {
-    const email = args.email.trim().toLowerCase();
+    const email = normalizeEmail(args.email);
     const authUser = await authComponent.safeGetAuthUser(ctx);
     if (!authUser) throw new Error("Unauthorized");
 

@@ -48,9 +48,12 @@ function RouteComponent() {
 
   const handleAddBarbero = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    const normalizedEmail = email.trim().toLowerCase();
+    if (!/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(normalizedEmail)) {
+      toast.error("Ingresa un correo válido.");
+      return;
+    }
     try {
-      const normalizedEmail = email.trim().toLowerCase();
       const result = await addBarbero({ email: normalizedEmail });
       if (result?.status === "pending") {
         toast.success(`Barbero añadido a la lista de pendientes. Se les concederá acceso al registrarse.`);
@@ -102,6 +105,8 @@ function RouteComponent() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full sm:max-w-sm"
+                  maxLength={254}
+                  pattern="^[^\s@<>]+@[^\s@<>]+\.[^\s@<>]+$"
                   required
                 />
                 <Button type="submit" className="w-full sm:w-auto">Añadir Barbero</Button>
@@ -260,4 +265,3 @@ function RouteComponent() {
     </>
   );
 }
-

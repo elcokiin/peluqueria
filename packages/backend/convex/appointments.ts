@@ -2,6 +2,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import { authComponent } from "./auth";
+import { assertDateString, sanitizeText } from "./security";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -35,9 +36,7 @@ function getTimestampForMinute(dateStr: string, minutesFromMidnight: number): nu
 }
 
 function assertValidDateString(date: string) {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-        throw new Error("date must be in YYYY-MM-DD format");
-    }
+    assertDateString(date);
 }
 
 /**
@@ -264,16 +263,19 @@ export const cancelAppointment = mutation({
         if (target.status === "cancelled") throw new Error("Appointment is already cancelled");
         if (target.status === "closed") throw new Error("Cannot cancel a closed appointment");
 
+        const reason = sanitizeText(args.reason, 500);
+        if (!reason) throw new Error("Cancellation reason is required");
+
         await ctx.db.patch(target._id, {
             status: "cancelled",
-            cancelReason: args.reason,
+            cancelReason: reason,
         });
 
         // Fire-and-forget email via Resend (Node.js action)
         await ctx.scheduler.runAfter(0, internal.notificationsNode.sendEmail, {
             appointmentId: target._id,
             type: "cancellation",
-            reason: args.reason,
+            reason,
         });
     },
 });
