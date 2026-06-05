@@ -69,7 +69,10 @@ export default function Header() {
             )}
 
             {role === "barber" && (
-              <Link to="/barber" className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Menú</Link>
+              <>
+                <Link to="/" activeOptions={{ exact: true }} className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Inicio</Link>
+                <Link to="/barber" className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Menú</Link>
+              </>
             )}
 
             {role === "admin" && (
