@@ -1,15 +1,13 @@
-import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
-import { Facebook, Instagram, Globe, Plus } from "lucide-react";
+import { Facebook, Instagram, Plus } from "lucide-react";
 import { toast } from "sonner";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@v1_peluqueria/ui/components/avatar";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@v1_peluqueria/ui/components/accordion";
 import { Card, CardContent } from "@v1_peluqueria/ui/components/card";
 import { Badge } from "@v1_peluqueria/ui/components/badge";
-import { ScrollArea, ScrollBar } from "@v1_peluqueria/ui/components/scroll-area";
 import { Button } from "@v1_peluqueria/ui/components/button";
 import { Skeleton } from "@v1_peluqueria/ui/components/skeleton";
 import { DatePicker } from "@v1_peluqueria/ui/components/date-picker";
@@ -37,7 +35,7 @@ export const Route = createFileRoute("/")({
 
 function HomeComponent() {
   const navigate = useNavigate();
-  const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
+  const [selectedBarberId] = useState<string | null>(null);
 
   const barbers = useQuery(api.users.getPublicBarbers);
 
@@ -174,7 +172,7 @@ function HomeComponent() {
             ) : activeCategories.length === 0 ? (
               <p className="py-4 text-center text-sm text-muted-foreground">No hay servicios disponibles en este momento.</p>
             ) : (
-              <Accordion type="multiple" defaultValue={["Barbas"]} className="flex w-full flex-col gap-4">
+              <Accordion multiple defaultValue={["Barbas"]} className="flex w-full flex-col gap-4">
                 {activeCategories.map(([category, items]) => (
                   <AccordionItem value={category} key={category} className="overflow-hidden rounded-[0.8rem] border border-border bg-card shadow-sm px-0">
                     <AccordionTrigger className="border-none px-4 py-4 text-[15px] font-semibold hover:bg-muted/50 hover:no-underline">
