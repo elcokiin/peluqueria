@@ -61,8 +61,6 @@ export default function Header() {
           </Link>
 
           <nav className="hidden sm:flex items-center gap-6 text-sm font-medium text-muted-foreground mr-auto">
-            <Link to="/" activeOptions={{ exact: true }} className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Inicio</Link>
-
             {(!profile || role === "user") && (
               <>
                 <Link to="/book" className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Agendar</Link>
@@ -71,10 +69,7 @@ export default function Header() {
             )}
 
             {role === "barber" && (
-              <>
-                <Link to="/" className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Agenda</Link>
-                <Link to="/barber" className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Menú</Link>
-              </>
+              <Link to="/barber" className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Menú</Link>
             )}
 
             {role === "admin" && (
