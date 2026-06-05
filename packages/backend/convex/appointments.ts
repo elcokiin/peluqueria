@@ -209,6 +209,10 @@ export const getAppointmentConfirmation = query({
         const barber = await ctx.db.get(appointment.barberId);
         const barberService = await ctx.db.get(appointment.serviceId);
         const masterService = barberService ? await ctx.db.get(barberService.serviceId) : null;
+        const rating = await ctx.db
+            .query("ratings")
+            .withIndex("by_appointment", (q) => q.eq("appointmentId", appointment._id))
+            .unique();
 
         return {
             ...appointment,
@@ -216,6 +220,15 @@ export const getAppointmentConfirmation = query({
             barberName: barber?.name || barber?.email || "Barbero",
             serviceName: masterService?.name || "Servicio",
             servicePrice: barberService?.price ?? 0,
+            rating: rating
+                ? {
+                    _id: rating._id,
+                    rating: rating.rating,
+                    comment: rating.comment,
+                    createdAt: rating.createdAt,
+                    updatedAt: rating.updatedAt,
+                }
+                : null,
         };
     },
 });
@@ -236,12 +249,25 @@ export const myAppointments = query({
                 const barber = await ctx.db.get(app.barberId);
                 const barberService = await ctx.db.get(app.serviceId);
                 const masterService = barberService ? await ctx.db.get(barberService.serviceId) : null;
+                const rating = await ctx.db
+                    .query("ratings")
+                    .withIndex("by_appointment", (q) => q.eq("appointmentId", app._id))
+                    .unique();
 
                 return {
                     ...app,
                     barberName: barber?.name || barber?.email || "Barbero",
                     serviceName: masterService?.name || "Servicio",
                     servicePrice: barberService?.price ?? null,
+                    rating: rating
+                        ? {
+                            _id: rating._id,
+                            rating: rating.rating,
+                            comment: rating.comment,
+                            createdAt: rating.createdAt,
+                            updatedAt: rating.updatedAt,
+                        }
+                        : null,
                 };
             })
         );

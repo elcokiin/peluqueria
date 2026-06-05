@@ -104,6 +104,34 @@ export default defineSchema({
   })
     .index("by_appointment", ["appointmentId"]),
 
+  // 7. Service ratings and monthly barber MVP history (F9)
+  ratings: defineTable({
+    appointmentId: v.id("appointments"),
+    barberId: v.id("users"),
+    clientId: v.id("users"),
+    rating: v.number(), // 1..5 stars
+    comment: v.optional(v.string()),
+    month: v.string(), // "YYYY-MM", derived from the appointment date
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_appointment", ["appointmentId"])
+    .index("by_client", ["clientId"])
+    .index("by_barber", ["barberId"])
+    .index("by_barber_and_month", ["barberId", "month"])
+    .index("by_month", ["month"]),
+
+  monthlyMvpAwards: defineTable({
+    month: v.string(), // "YYYY-MM"
+    barberId: v.id("users"),
+    averageRating: v.number(),
+    ratingCount: v.number(),
+    awardedAt: v.number(),
+  })
+    .index("by_month", ["month"])
+    .index("by_barber", ["barberId"])
+    .index("by_barber_and_month", ["barberId", "month"]),
+
   pushSubscriptions: defineTable({
     clientId: v.id("users"),
     endpoint: v.string(),

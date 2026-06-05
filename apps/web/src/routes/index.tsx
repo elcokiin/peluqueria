@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery, useMutation, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
-import { Camera, Facebook, Instagram, Plus, ScanLine, X } from "lucide-react";
+import { Camera, Facebook, Instagram, Plus, ScanLine, Star, Trophy, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { OfflineSupportNotice } from "@/components/offline-support-notice";
@@ -169,16 +169,29 @@ function HomeComponent() {
                     onClick={() => navigate({ to: '/book/$barberId', params: { barberId: b._id } })}
                     className={`group flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all snap-start min-w-[100px] sm:min-w-[120px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring border-transparent bg-muted/30 hover:bg-muted/60 hover:border-primary/20`}
                   >
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden transition-all">
+                    <div className="relative">
+                      <div className="w-16 h-16 rounded-full flex items-center justify-center overflow-hidden transition-all">
                       <img 
                         src={AVATARS[index % AVATARS.length]} 
                         alt={b.name}
                         className="w-full h-full object-cover transition-opacity opacity-80 group-hover:opacity-100"
                       />
+                      </div>
+                      {b.isMvp && (
+                        <span className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full border-2 border-background bg-amber-400 text-amber-950">
+                          <Trophy className="size-3.5" />
+                        </span>
+                      )}
                     </div>
                     <span className="text-sm font-medium text-center line-clamp-1 text-foreground">
                       {b.name}
                     </span>
+                    {b.isMvp && (
+                      <span className="flex items-center gap-1 rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-semibold text-amber-700 dark:text-amber-300">
+                        <Star className="size-3 fill-amber-400 text-amber-500" />
+                        MVP {b.mvpMonth}
+                      </span>
+                    )}
                   </button>
                 );
               })}

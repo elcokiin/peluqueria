@@ -15,7 +15,7 @@ import {
   SheetTitle,
 } from "@v1_peluqueria/ui/components/sheet";
 import { Skeleton } from "@v1_peluqueria/ui/components/skeleton";
-import { Bell, CalendarClock, CalendarPlus, Scissors, X } from "lucide-react";
+import { Bell, CalendarClock, CalendarPlus, Scissors, Star, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
@@ -341,6 +341,14 @@ function AppointmentCard({ appointment, onCancel }: { appointment: any; onCancel
             </div>
             {appointment.status === "cancelled" && appointment.cancelReason && (
               <p className="text-sm text-muted-foreground">Motivo: {appointment.cancelReason}</p>
+            )}
+            {appointment.status === "closed" && (
+              <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                <Star className={`size-4 ${appointment.rating ? "fill-amber-400 text-amber-500" : "text-muted-foreground"}`} />
+                {appointment.rating
+                  ? `Calificaste con ${appointment.rating.rating}/5`
+                  : "Pendiente por calificar"}
+              </div>
             )}
           </div>
 

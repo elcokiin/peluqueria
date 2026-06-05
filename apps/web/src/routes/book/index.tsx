@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { api } from '@v1_peluqueria/backend/convex/_generated/api';
-import { ArrowRight, CalendarDays, Scissors } from 'lucide-react';
+import { ArrowRight, CalendarDays, Scissors, Star, Trophy } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@v1_peluqueria/ui/components/card';
 import { Skeleton } from '@v1_peluqueria/ui/components/skeleton';
 
@@ -18,6 +18,7 @@ export const Route = createFileRoute('/book/')({
 function BookIndexComponent() {
   const navigate = useNavigate();
   const barbers = useQuery(api.users.getPublicBarbers);
+  const mvpAwards = useQuery(api.ratings.listMvpAwards);
 
   if (barbers === undefined) {
     return (
@@ -62,20 +63,45 @@ function BookIndexComponent() {
           >
             <Card className="h-full transition-colors hover:ring-primary/50">
               <CardHeader className="flex-row items-center gap-4">
-                <img
-                  src={AVATARS[index % AVATARS.length]}
-                  alt=""
-                  className="size-14 rounded-full object-cover"
-                />
+                <div className="relative shrink-0">
+                  <img
+                    src={AVATARS[index % AVATARS.length]}
+                    alt=""
+                    className="size-14 rounded-full object-cover"
+                  />
+                  {barber.isMvp && (
+                    <span className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full border-2 border-background bg-amber-400 text-amber-950">
+                      <Trophy className="size-3.5" />
+                    </span>
+                  )}
+                </div>
                 <div className="min-w-0">
-                  <CardTitle className="truncate text-base">{barber.name}</CardTitle>
-                  <CardDescription>Profesional disponible</CardDescription>
+                  <div className="flex min-w-0 items-center gap-2">
+                    <CardTitle className="truncate text-base">{barber.name}</CardTitle>
+                    {barber.isMvp && (
+                      <span className="shrink-0 rounded-full bg-amber-400/20 px-2 py-0.5 text-[10px] font-semibold uppercase text-amber-700 dark:text-amber-300">
+                        MVP
+                      </span>
+                    )}
+                  </div>
+                  <CardDescription>
+                    {barber.isMvp ? `Barbero MVP ${barber.mvpMonth}` : 'Profesional disponible'}
+                  </CardDescription>
                 </div>
               </CardHeader>
               <CardContent className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <CalendarDays data-icon="inline-start" />
-                  Ver agenda
+                  {barber.isMvp ? (
+                    <>
+                      <Star data-icon="inline-start" className="fill-amber-400 text-amber-500" />
+                      {barber.mvpAverageRating?.toFixed(1)} · {barber.mvpRatingCount} reseñas
+                    </>
+                  ) : (
+                    <>
+                      <CalendarDays data-icon="inline-start" />
+                      Ver agenda
+                    </>
+                  )}
                 </div>
                 <span className="inline-flex h-7 items-center justify-center gap-1 rounded-none bg-primary px-2.5 text-xs font-medium text-primary-foreground">
                   Continuar
@@ -86,6 +112,25 @@ function BookIndexComponent() {
           </button>
         ))}
       </div>
+      {mvpAwards && mvpAwards.length > 0 && (
+        <section className="space-y-3">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Historial MVP</h2>
+          <div className="divide-y rounded-lg border">
+            {mvpAwards.slice(0, 6).map((award) => (
+              <div key={award._id} className="flex items-center justify-between gap-3 px-4 py-3 text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium text-foreground">{award.barberName}</p>
+                  <p className="text-xs text-muted-foreground">{award.month}</p>
+                </div>
+                <div className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-300">
+                  <Star className="size-3.5 fill-amber-400 text-amber-500" />
+                  {award.averageRating.toFixed(1)} · {award.ratingCount}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }

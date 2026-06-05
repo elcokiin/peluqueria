@@ -312,6 +312,10 @@ export const removeBarber = mutation({
 export const getPublicBarbers = query({
   args: {},
   handler: async (ctx) => {
+    const awards = await ctx.db.query("monthlyMvpAwards").take(100);
+    awards.sort((a, b) => b.month.localeCompare(a.month));
+    const latestMvp = awards[0] ?? null;
+
     const barbers = await ctx.db
       .query("users")
       .filter((q) => 
@@ -349,6 +353,10 @@ export const getPublicBarbers = query({
     return barbersWithServices.map(b => ({
       _id: b._id,
       name: b.name || "Unknown Barber",
+      isMvp: latestMvp?.barberId === b._id,
+      mvpMonth: latestMvp?.barberId === b._id ? latestMvp.month : null,
+      mvpAverageRating: latestMvp?.barberId === b._id ? latestMvp.averageRating : null,
+      mvpRatingCount: latestMvp?.barberId === b._id ? latestMvp.ratingCount : null,
     }));
   }
 });

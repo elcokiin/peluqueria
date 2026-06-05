@@ -18,6 +18,7 @@ import type * as http from "../http.js";
 import type * as notifications from "../notifications.js";
 import type * as notificationsNode from "../notificationsNode.js";
 import type * as privateData from "../privateData.js";
+import type * as ratings from "../ratings.js";
 import type * as schedule from "../schedule.js";
 import type * as services from "../services.js";
 import type * as slots from "../slots.js";
@@ -40,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   notifications: typeof notifications;
   notificationsNode: typeof notificationsNode;
   privateData: typeof privateData;
+  ratings: typeof ratings;
   schedule: typeof schedule;
   services: typeof services;
   slots: typeof slots;

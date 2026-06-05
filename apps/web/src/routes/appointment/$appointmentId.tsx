@@ -5,11 +5,13 @@ import {
   Authenticated,
   AuthLoading,
   Unauthenticated,
+  useMutation,
   useQuery,
 } from "convex/react";
 import { useEffect, useMemo, useState } from "react";
 import QRCode from "qrcode";
-import { CalendarCheck, Clock, QrCode } from "lucide-react";
+import { CalendarCheck, Clock, QrCode, Star } from "lucide-react";
+import { toast } from "sonner";
 
 import { Badge } from "@v1_peluqueria/ui/components/badge";
 import { Button } from "@v1_peluqueria/ui/components/button";
@@ -41,7 +43,11 @@ function AppointmentConfirmation() {
   const appointment = useQuery(api.appointments.getAppointmentConfirmation, {
     appointmentId: appointmentId as Id<"appointments">,
   });
+  const submitRating = useMutation(api.ratings.submitAppointmentRating);
   const [qrDataUrl, setQrDataUrl] = useState("");
+  const [selectedRating, setSelectedRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
 
   const checkInPayload = useMemo(
     () => (appointment?.checkInCode ? buildCheckInPayload(appointment.checkInCode) : ""),
@@ -68,6 +74,34 @@ function AppointmentConfirmation() {
       isMounted = false;
     };
   }, [checkInPayload]);
+
+  useEffect(() => {
+    if (!appointment?.rating) return;
+    setSelectedRating(appointment.rating.rating);
+    setComment(appointment.rating.comment ?? "");
+  }, [appointment?.rating]);
+
+  const handleSubmitRating = async () => {
+    if (!appointment) return;
+    if (selectedRating < 1 || selectedRating > 5) {
+      toast.error("Selecciona una calificación de 1 a 5 estrellas.");
+      return;
+    }
+
+    setIsSubmittingRating(true);
+    try {
+      await submitRating({
+        appointmentId: appointment._id,
+        rating: selectedRating,
+        comment: comment.trim() || undefined,
+      });
+      toast.success(appointment.rating ? "Calificación actualizada." : "Gracias por calificar el servicio.");
+    } catch (error: any) {
+      toast.error(error.message || "No se pudo guardar la calificación.");
+    } finally {
+      setIsSubmittingRating(false);
+    }
+  };
 
   if (appointment === undefined) {
     return (
@@ -164,6 +198,51 @@ function AppointmentConfirmation() {
           </div>
         </CardContent>
       </Card>
+
+      {appointment.status === "closed" && (
+        <Card>
+          <CardContent className="space-y-4 p-4">
+            <div>
+              <h2 className="text-base font-semibold">Califica el servicio</h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Tu calificación ayuda a destacar al Barbero MVP del mes.
+              </p>
+            </div>
+            <div className="flex items-center gap-1" role="radiogroup" aria-label="Calificación del servicio">
+              {[1, 2, 3, 4, 5].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  role="radio"
+                  aria-checked={selectedRating === value}
+                  aria-label={`${value} estrellas`}
+                  onClick={() => setSelectedRating(value)}
+                  className="flex size-9 items-center justify-center text-muted-foreground transition-colors hover:text-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <Star
+                    className={`size-6 ${value <= selectedRating ? "fill-amber-400 text-amber-500" : ""}`}
+                  />
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+              maxLength={280}
+              rows={3}
+              placeholder="Comentario opcional"
+              className="min-h-20 w-full resize-none rounded-md border border-input bg-background px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-1 focus-visible:ring-ring/50"
+            />
+            <Button
+              className="w-full"
+              onClick={handleSubmitRating}
+              disabled={isSubmittingRating || selectedRating === 0}
+            >
+              {appointment.rating ? "Actualizar calificación" : "Enviar calificación"}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       <Button render={<Link to="/" />} variant="outline">
         Volver al inicio
