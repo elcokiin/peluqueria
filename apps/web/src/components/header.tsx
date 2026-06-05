@@ -63,6 +63,7 @@ export default function Header() {
           <nav className="hidden sm:flex items-center gap-6 text-sm font-medium text-muted-foreground mr-auto">
             {(!profile || role === "user") && (
               <>
+                <Link to="/" activeOptions={{ exact: true }} className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Inicio</Link>
                 <Link to="/book" className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Agendar</Link>
                 <Link to="/appointments" className="transition-colors hover:text-foreground [&.active]:text-primary [&.active]:font-semibold">Mis Citas</Link>
               </>
