@@ -8,7 +8,6 @@ import {
   createRootRouteWithContext,
   useRouteContext,
 } from "@tanstack/react-router";
-import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
@@ -101,7 +100,6 @@ function RootDocument() {
               <MobileNav />
             </div>
             <Toaster richColors theme="dark" position="top-right" closeButton />
-            <TanStackRouterDevtools position="bottom-right" />
           </ConvexBetterAuthProvider>
         </ThemeProvider>
         <Scripts />
