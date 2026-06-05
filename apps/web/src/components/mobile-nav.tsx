@@ -8,6 +8,7 @@ import {
   LayoutDashboard,
   User,
   Calendar,
+  CalendarPlus,
 } from "lucide-react";
 import { Link, useNavigate, useLocation } from "@tanstack/react-router";
 import { authClient } from "@/lib/auth-client";
@@ -34,13 +35,14 @@ export default function MobileNav() {
     const getRoutesForRole = (r: string) => {
       if (r === "admin") return ["/", "/admin", "/admin/services"];
       if (r === "barber") return ["/", "/barber"];
-      return ["/", firstBarberId ? `/book/${firstBarberId}` : "/book"];
+      return ["/", firstBarberId ? `/book/${firstBarberId}` : "/book", "/appointments"];
     };
 
     const routes = getRoutesForRole(role);
     const currentIndex = routes.findIndex((route) => {
       if (route === "/") return location.pathname === "/";
       if (route.startsWith("/book")) return location.pathname.startsWith("/book");
+      if (route === "/appointments") return location.pathname === "/appointments";
       if (route === "/admin/services") return location.pathname === "/admin/services";
       if (route === "/admin") return location.pathname === "/admin";
       return location.pathname.startsWith(route);
@@ -121,7 +123,7 @@ export default function MobileNav() {
             }`}
           >
             <Calendar className="h-5 w-5" />
-            <span className="text-[10px]">Mis Citas</span>
+            <span className="text-[10px]">Agendar</span>
           </Link>
         ) : (
           <Link
@@ -133,9 +135,19 @@ export default function MobileNav() {
             }`}
           >
             <Calendar className="h-5 w-5" />
-            <span className="text-[10px]">Mis Citas</span>
+            <span className="text-[10px]">Agendar</span>
           </Link>
         )
+      )}
+
+      {(!profile || role === "user") && (
+        <Link
+          to="/appointments"
+          className="flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl text-muted-foreground hover:text-foreground [&.active]:text-primary [&.active]:bg-primary/10 [&.active]:font-medium transition-all"
+        >
+          <CalendarPlus className="h-5 w-5" />
+          <span className="text-[10px]">Mis Citas</span>
+        </Link>
       )}
 
       {/* Vista para Barberos */}
@@ -188,4 +200,3 @@ export default function MobileNav() {
     </div>
   );
 }
-

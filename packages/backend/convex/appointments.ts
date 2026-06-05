@@ -188,10 +188,28 @@ export const myAppointments = query({
     args: {},
     handler: async (ctx) => {
         const profile = await requireAuth(ctx, "any");
-        return await ctx.db
+        const appointments = await ctx.db
             .query("appointments")
             .withIndex("by_client", (q) => q.eq("clientId", profile._id))
-            .collect();
+            .order("desc")
+            .take(50);
+
+        const enriched = await Promise.all(
+            appointments.map(async (app) => {
+                const barber = await ctx.db.get(app.barberId);
+                const barberService = await ctx.db.get(app.serviceId);
+                const masterService = barberService ? await ctx.db.get(barberService.serviceId) : null;
+
+                return {
+                    ...app,
+                    barberName: barber?.name || barber?.email || "Barbero",
+                    serviceName: masterService?.name || "Servicio",
+                    servicePrice: barberService?.price ?? null,
+                };
+            })
+        );
+
+        return enriched.sort((a, b) => a.startTime - b.startTime);
     },
 });
 
@@ -238,6 +256,7 @@ export const createAppointment = mutation({
             endTime,
             totalDuration,
             status: "scheduled",
+            notificationSent: false,
         });
     },
 });
@@ -315,6 +334,7 @@ export const rescheduleAppointment = mutation({
             date: args.date,
             startTime: args.startTime,
             endTime,
+            notificationSent: false,
         });
 
         await ctx.scheduler.runAfter(0, internal.notificationsNode.sendEmail, {

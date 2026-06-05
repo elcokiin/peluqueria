@@ -4,6 +4,7 @@ import { internalAction } from "./_generated/server";
 import { v } from "convex/values";
 import { Resend } from "resend";
 import { internal } from "./_generated/api";
+import webpush from "web-push";
 
 /**
  * Send an email notification using Resend.
@@ -110,5 +111,91 @@ export const sendEmail = internalAction({
                 sentAt: Date.now(),
             });
         }
+    },
+});
+
+export const sendDuePushReminders = internalAction({
+    args: {},
+    handler: async (ctx) => {
+        const env = (globalThis as any).process?.env ?? {};
+
+        if (!env.VAPID_PUBLIC_KEY || !env.VAPID_PRIVATE_KEY) {
+            console.warn("VAPID_PUBLIC_KEY/VAPID_PRIVATE_KEY are not configured. Skipping push reminders.");
+            return null;
+        }
+
+        webpush.setVapidDetails(
+            env.VAPID_SUBJECT || "mailto:admin@barberstudio.local",
+            env.VAPID_PUBLIC_KEY,
+            env.VAPID_PRIVATE_KEY
+        );
+
+        const now = Date.now();
+        const dueAppointments = await ctx.runQuery(internal.notifications.internalListDueReminderAppointments, {
+            now,
+            windowEnd: now + 30 * 60 * 1000,
+            limit: 25,
+        });
+
+        for (const app of dueAppointments) {
+            const subscriptions = await ctx.runQuery(internal.notifications.internalListSubscriptionsForClient, {
+                clientId: app.clientId,
+            });
+
+            if (subscriptions.length === 0) {
+                await ctx.runMutation(internal.notifications.internalMarkReminderSent, {
+                    appointmentId: app.appointmentId,
+                    success: false,
+                    error: "Client has no push subscriptions",
+                });
+                continue;
+            }
+
+            const appDate = new Date(app.startTime).toLocaleString("es-CO", {
+                timeZone: "America/Bogota",
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "2-digit",
+                month: "short",
+            });
+
+            const payload = JSON.stringify({
+                title: "Tu cita está cerca",
+                body: `${app.serviceName} con ${app.barberName} a las ${appDate}.`,
+                url: "/appointments",
+                tag: `appointment-${app.appointmentId}`,
+            });
+
+            let sent = false;
+            let lastError: string | undefined;
+
+            for (const subscription of subscriptions) {
+                try {
+                    await webpush.sendNotification(
+                        {
+                            endpoint: subscription.endpoint,
+                            expirationTime: subscription.expirationTime ?? null,
+                            keys: {
+                                p256dh: subscription.p256dh,
+                                auth: subscription.auth,
+                            },
+                        },
+                        payload
+                    );
+                    sent = true;
+                } catch (error: unknown) {
+                    lastError = error instanceof Error ? error.message : "Unknown push error";
+                    console.error("Push reminder error:", error);
+                }
+            }
+
+            await ctx.runMutation(internal.notifications.internalMarkReminderSent, {
+                appointmentId: app.appointmentId,
+                success: sent,
+                error: sent ? undefined : lastError ?? "Push delivery failed",
+            });
+        }
+
+        return null;
     },
 });

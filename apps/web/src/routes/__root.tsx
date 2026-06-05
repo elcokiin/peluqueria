@@ -12,6 +12,7 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@v1_peluqueria/ui/components/theme-provider";
+import { useEffect } from "react";
 
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
@@ -77,6 +78,7 @@ function RootDocument() {
             initialToken={context.token}
           >
             <div className="grid h-svh grid-rows-[auto_1fr_auto] sm:grid-rows-[auto_1fr]">
+              <PwaServiceWorkerRegistrar />
               <Header />
               <div className="overflow-y-auto">
                 <Outlet />
@@ -91,4 +93,16 @@ function RootDocument() {
       </body>
     </html>
   );
+}
+
+function PwaServiceWorkerRegistrar() {
+  useEffect(() => {
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("/sw.js").catch((error) => {
+        console.error("Service worker registration failed:", error);
+      });
+    }
+  }, []);
+
+  return null;
 }

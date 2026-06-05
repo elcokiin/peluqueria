@@ -85,16 +85,31 @@ export default defineSchema({
   })
     .index("by_barber_and_date", ["barberId", "date"])
     .index("by_client", ["clientId"])
-    .index("by_barber_and_status", ["barberId", "status"]),
+    .index("by_barber_and_status", ["barberId", "status"])
+    .index("by_status_and_startTime", ["status", "startTime"])
+    .index("by_status_and_notificationSent_and_startTime", ["status", "notificationSent", "startTime"]),
 
   // 6. Email notification log (F4)
   notifications: defineTable({
     appointmentId: v.id("appointments"),
     clientId: v.id("users"),
-    type: v.union(v.literal("cancellation"), v.literal("reschedule")),
+    type: v.union(v.literal("cancellation"), v.literal("reschedule"), v.literal("reminder")),
     sentAt: v.number(),           // UTC timestamp ms
     success: v.boolean(),
     error: v.optional(v.string()),
   })
     .index("by_appointment", ["appointmentId"]),
+
+  pushSubscriptions: defineTable({
+    clientId: v.id("users"),
+    endpoint: v.string(),
+    expirationTime: v.optional(v.union(v.number(), v.null())),
+    p256dh: v.string(),
+    auth: v.string(),
+    userAgent: v.optional(v.string()),
+    updatedAt: v.number(),
+    createdAt: v.number(),
+  })
+    .index("by_client", ["clientId"])
+    .index("by_endpoint", ["endpoint"]),
 });

@@ -118,7 +118,7 @@ function BarberBookingComponent() {
         startTime: selectedTime,
       });
       toast.success('¡Cita reservada con éxito!');
-      navigate({ to: '/' });
+      navigate({ to: '/appointments' });
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || 'Error al reservar la cita. Por favor intenta de nuevo.');

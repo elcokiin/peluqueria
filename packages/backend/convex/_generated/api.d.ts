@@ -12,6 +12,7 @@ import type * as appointments from "../appointments.js";
 import type * as auth from "../auth.js";
 import type * as barberServices from "../barberServices.js";
 import type * as blocks from "../blocks.js";
+import type * as crons from "../crons.js";
 import type * as healthCheck from "../healthCheck.js";
 import type * as http from "../http.js";
 import type * as notifications from "../notifications.js";
@@ -33,6 +34,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   barberServices: typeof barberServices;
   blocks: typeof blocks;
+  crons: typeof crons;
   healthCheck: typeof healthCheck;
   http: typeof http;
   notifications: typeof notifications;
