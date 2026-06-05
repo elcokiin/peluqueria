@@ -42,24 +42,27 @@ function DatePicker({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <span
-          className={cn(
-            "inline-flex h-9 shrink-0 items-center rounded-none border bg-background px-3 py-2 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border-input shadow-sm text-foreground w-full justify-start text-left font-normal",
-            !value && "text-muted-foreground",
-            className
-          )}
-        >
-          <CalendarIcon className="mr-2 size-4" />
-          {value
-            ? value.toLocaleDateString("es-CO", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-              })
-            : placeholder}
-        </span>
-      </PopoverTrigger>
+      <PopoverTrigger
+        render={
+          <button
+            type="button"
+            className={cn(
+              "inline-flex h-9 shrink-0 items-center rounded-none border bg-background px-3 py-2 text-sm shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border-input shadow-sm text-foreground w-full justify-start text-left font-normal",
+              !value && "text-muted-foreground",
+              className
+            )}
+          >
+            <CalendarIcon className="mr-2 size-4" />
+            {value
+              ? value.toLocaleDateString("es-CO", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })
+              : placeholder}
+          </button>
+        }
+      />
       <PopoverContent align="start" className="w-auto p-0">
         <Calendar
           mode="single"
