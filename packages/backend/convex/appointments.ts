@@ -40,6 +40,10 @@ function assertValidDateString(date: string) {
     }
 }
 
+function createCheckInCode() {
+    return crypto.randomUUID();
+}
+
 /**
  * Core validation: verifies the appointment fits within schedule, doesn't
  * overlap blocks, and doesn't conflict with existing appointments.
@@ -183,6 +187,39 @@ export const listAppointments = query({
     },
 });
 
+/** Get one appointment for its confirmation screen. */
+export const getAppointmentConfirmation = query({
+    args: {
+        appointmentId: v.id("appointments"),
+    },
+    handler: async (ctx, args) => {
+        const profile = await requireAuth(ctx, "any");
+        const appointment = await ctx.db.get(args.appointmentId);
+        if (!appointment) throw new Error("Appointment not found");
+
+        if (
+            appointment.clientId !== profile._id &&
+            appointment.barberId !== profile._id &&
+            profile.role !== "admin"
+        ) {
+            throw new Error("Unauthorized to view this appointment");
+        }
+
+        const client = await ctx.db.get(appointment.clientId);
+        const barber = await ctx.db.get(appointment.barberId);
+        const barberService = await ctx.db.get(appointment.serviceId);
+        const masterService = barberService ? await ctx.db.get(barberService.serviceId) : null;
+
+        return {
+            ...appointment,
+            clientName: client?.name || client?.email || "Cliente",
+            barberName: barber?.name || barber?.email || "Barbero",
+            serviceName: masterService?.name || "Servicio",
+            servicePrice: barberService?.price ?? 0,
+        };
+    },
+});
+
 /** Get all appointments for the authenticated client. */
 export const myAppointments = query({
     args: {},
@@ -257,6 +294,7 @@ export const createAppointment = mutation({
             totalDuration,
             status: "scheduled",
             notificationSent: false,
+            checkInCode: createCheckInCode(),
         });
     },
 });
@@ -281,6 +319,7 @@ export const cancelAppointment = mutation({
         }
 
         if (target.status === "cancelled") throw new Error("Appointment is already cancelled");
+        if (target.status === "checked_in") throw new Error("Cannot cancel a checked-in appointment");
         if (target.status === "closed") throw new Error("Cannot cancel a closed appointment");
 
         await ctx.db.patch(target._id, {
@@ -381,5 +420,46 @@ export const closeAppointment = mutation({
             extraServiceIds: uniqueExtraIds,
             finalPrice,
         });
+    },
+});
+
+/** Check in a client by scanning the unique appointment QR code. */
+export const checkInByCode = mutation({
+    args: {
+        checkInCode: v.string(),
+    },
+    handler: async (ctx, args) => {
+        const profile = await requireAuth(ctx, "barber");
+        const normalizedCode = args.checkInCode.trim();
+        if (!normalizedCode) throw new Error("Invalid check-in code");
+
+        const target = await ctx.db
+            .query("appointments")
+            .withIndex("by_checkInCode", (q) => q.eq("checkInCode", normalizedCode))
+            .unique();
+
+        if (!target) throw new Error("No appointment matches this QR code");
+        if (target.barberId !== profile._id && profile.role !== "admin") {
+            throw new Error("Unauthorized to check in this appointment");
+        }
+        if (target.status === "cancelled") throw new Error("Cannot check in a cancelled appointment");
+        if (target.status === "closed") throw new Error("Appointment is already closed");
+        if (target.status === "checked_in") throw new Error("Client is already checked in");
+
+        await ctx.db.patch(target._id, {
+            status: "checked_in",
+            checkedInAt: Date.now(),
+        });
+
+        const client = await ctx.db.get(target.clientId);
+        const barberService = await ctx.db.get(target.serviceId);
+        const masterService = barberService ? await ctx.db.get(barberService.serviceId) : null;
+
+        return {
+            appointmentId: target._id,
+            clientName: client?.name || client?.email || "Cliente",
+            serviceName: masterService?.name || "Servicio",
+            startTime: target.startTime,
+        };
     },
 });

@@ -15,6 +15,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BookIndexRouteImport } from './routes/book/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as BookBarberIdRouteImport } from './routes/book/$barberId'
+import { Route as AppointmentAppointmentIdRouteImport } from './routes/appointment/$appointmentId'
 import { Route as AdminServicesRouteImport } from './routes/admin/services'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
@@ -48,6 +49,12 @@ const BookBarberIdRoute = BookBarberIdRouteImport.update({
   path: '/book/$barberId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppointmentAppointmentIdRoute =
+  AppointmentAppointmentIdRouteImport.update({
+    id: '/appointment/$appointmentId',
+    path: '/appointment/$appointmentId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminServicesRoute = AdminServicesRouteImport.update({
   id: '/admin/services',
   path: '/admin/services',
@@ -64,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/appointments': typeof AppointmentsRoute
   '/barber': typeof BarberRoute
   '/admin/services': typeof AdminServicesRoute
+  '/appointment/$appointmentId': typeof AppointmentAppointmentIdRoute
   '/book/$barberId': typeof BookBarberIdRoute
   '/admin/': typeof AdminIndexRoute
   '/book/': typeof BookIndexRoute
@@ -74,6 +82,7 @@ export interface FileRoutesByTo {
   '/appointments': typeof AppointmentsRoute
   '/barber': typeof BarberRoute
   '/admin/services': typeof AdminServicesRoute
+  '/appointment/$appointmentId': typeof AppointmentAppointmentIdRoute
   '/book/$barberId': typeof BookBarberIdRoute
   '/admin': typeof AdminIndexRoute
   '/book': typeof BookIndexRoute
@@ -85,6 +94,7 @@ export interface FileRoutesById {
   '/appointments': typeof AppointmentsRoute
   '/barber': typeof BarberRoute
   '/admin/services': typeof AdminServicesRoute
+  '/appointment/$appointmentId': typeof AppointmentAppointmentIdRoute
   '/book/$barberId': typeof BookBarberIdRoute
   '/admin/': typeof AdminIndexRoute
   '/book/': typeof BookIndexRoute
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/barber'
     | '/admin/services'
+    | '/appointment/$appointmentId'
     | '/book/$barberId'
     | '/admin/'
     | '/book/'
@@ -107,6 +118,7 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/barber'
     | '/admin/services'
+    | '/appointment/$appointmentId'
     | '/book/$barberId'
     | '/admin'
     | '/book'
@@ -117,6 +129,7 @@ export interface FileRouteTypes {
     | '/appointments'
     | '/barber'
     | '/admin/services'
+    | '/appointment/$appointmentId'
     | '/book/$barberId'
     | '/admin/'
     | '/book/'
@@ -128,6 +141,7 @@ export interface RootRouteChildren {
   AppointmentsRoute: typeof AppointmentsRoute
   BarberRoute: typeof BarberRoute
   AdminServicesRoute: typeof AdminServicesRoute
+  AppointmentAppointmentIdRoute: typeof AppointmentAppointmentIdRoute
   BookBarberIdRoute: typeof BookBarberIdRoute
   AdminIndexRoute: typeof AdminIndexRoute
   BookIndexRoute: typeof BookIndexRoute
@@ -178,6 +192,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BookBarberIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/appointment/$appointmentId': {
+      id: '/appointment/$appointmentId'
+      path: '/appointment/$appointmentId'
+      fullPath: '/appointment/$appointmentId'
+      preLoaderRoute: typeof AppointmentAppointmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/services': {
       id: '/admin/services'
       path: '/admin/services'
@@ -200,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   AppointmentsRoute: AppointmentsRoute,
   BarberRoute: BarberRoute,
   AdminServicesRoute: AdminServicesRoute,
+  AppointmentAppointmentIdRoute: AppointmentAppointmentIdRoute,
   BookBarberIdRoute: BookBarberIdRoute,
   AdminIndexRoute: AdminIndexRoute,
   BookIndexRoute: BookIndexRoute,

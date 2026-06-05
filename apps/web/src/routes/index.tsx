@@ -1,15 +1,13 @@
-import { createFileRoute, Navigate, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery, useMutation, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
-import { Facebook, Instagram, Globe, Plus } from "lucide-react";
+import { Camera, Facebook, Instagram, Plus, ScanLine, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { Avatar, AvatarFallback, AvatarImage } from "@v1_peluqueria/ui/components/avatar";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@v1_peluqueria/ui/components/accordion";
 import { Card, CardContent } from "@v1_peluqueria/ui/components/card";
 import { Badge } from "@v1_peluqueria/ui/components/badge";
-import { ScrollArea, ScrollBar } from "@v1_peluqueria/ui/components/scroll-area";
 import { Button } from "@v1_peluqueria/ui/components/button";
 import { Skeleton } from "@v1_peluqueria/ui/components/skeleton";
 import { DatePicker } from "@v1_peluqueria/ui/components/date-picker";
@@ -29,13 +27,39 @@ import avatar3 from '../../assets/avatars/apple-avatar-3.jpeg';
 
 const AVATARS = [avatar1, avatar2, avatar3];
 
+function extractCheckInCode(rawValue: string) {
+  const value = rawValue.trim();
+  if (!value) return "";
+
+  try {
+    const parsedUrl = new URL(value);
+    const code = parsedUrl.searchParams.get("code");
+    if (code) return code.trim();
+  } catch {
+    // Not a URL; continue parsing supported raw formats.
+  }
+
+  if (value.startsWith("barberstudio-checkin:")) {
+    return value.replace("barberstudio-checkin:", "").trim();
+  }
+
+  try {
+    const parsedJson = JSON.parse(value) as { checkInCode?: unknown };
+    if (typeof parsedJson.checkInCode === "string") return parsedJson.checkInCode.trim();
+  } catch {
+    // Plain code fallback below.
+  }
+
+  return value;
+}
+
 export const Route = createFileRoute("/")({
   component: RouteComponent,
 });
 
 function HomeComponent() {
   const navigate = useNavigate();
-  const [selectedBarberId, setSelectedBarberId] = useState<string | null>(null);
+  const selectedBarberId: string | null = null;
 
   const barbers = useQuery(api.users.getPublicBarbers);
 
@@ -217,6 +241,134 @@ function HomeComponent() {
   );
 }
 
+function CheckInScanner({
+  onCheckIn,
+  isCheckingIn,
+}: {
+  onCheckIn: (rawCode: string) => Promise<void>;
+  isCheckingIn: boolean;
+}) {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const controlsRef = useRef<{ stop: () => void } | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const [manualCode, setManualCode] = useState("");
+  const [cameraError, setCameraError] = useState("");
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let cancelled = false;
+
+    async function startScanner() {
+      setCameraError("");
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setCameraError("La cámara no está disponible en este navegador.");
+        return;
+      }
+      if (!videoRef.current) return;
+
+      try {
+        const { BrowserQRCodeReader } = await import("@zxing/browser");
+        const reader = new BrowserQRCodeReader();
+        const controls = await reader.decodeFromVideoDevice(
+          undefined,
+          videoRef.current,
+          async (result) => {
+            if (!result) return;
+            controlsRef.current?.stop();
+            controlsRef.current = null;
+            setIsOpen(false);
+            await onCheckIn(result.getText());
+          },
+        );
+
+        if (cancelled) {
+          controls.stop();
+          return;
+        }
+        controlsRef.current = controls;
+      } catch (error) {
+        console.error(error);
+        setCameraError("No se pudo iniciar la cámara. Revisa permisos o usa el código manual.");
+      }
+    }
+
+    startScanner();
+
+    return () => {
+      cancelled = true;
+      controlsRef.current?.stop();
+      controlsRef.current = null;
+    };
+  }, [isOpen, onCheckIn]);
+
+  const handleManualSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!manualCode.trim()) {
+      toast.error("Ingresa o escanea un código QR.");
+      return;
+    }
+    await onCheckIn(manualCode);
+    setManualCode("");
+    setIsOpen(false);
+  };
+
+  return (
+    <Card className="overflow-hidden">
+      <CardContent className="flex flex-col gap-4 p-4">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold">Check-in por QR</p>
+            <p className="mt-0.5 text-[12px] text-muted-foreground">
+              Escanea el código de confirmación del cliente al llegar.
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant={isOpen ? "outline" : "default"}
+            size="sm"
+            onClick={() => setIsOpen((open) => !open)}
+            disabled={isCheckingIn}
+            className="shrink-0"
+          >
+            {isOpen ? <X data-icon="inline-start" /> : <Camera data-icon="inline-start" />}
+            {isOpen ? "Cerrar" : "Escanear"}
+          </Button>
+        </div>
+
+        {isOpen && (
+          <div className="flex flex-col gap-3">
+            <div className="relative aspect-[4/3] overflow-hidden rounded-lg border bg-muted">
+              <video ref={videoRef} className="size-full object-cover" muted playsInline />
+              <div className="pointer-events-none absolute inset-0 grid place-items-center">
+                <div className="size-40 rounded-lg border-2 border-primary/80 shadow-[0_0_0_999px_rgb(0_0_0/0.35)]" />
+              </div>
+            </div>
+            {cameraError && (
+              <p className="rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-[12px] text-destructive">
+                {cameraError}
+              </p>
+            )}
+            <form onSubmit={handleManualSubmit} className="flex gap-2">
+              <Input
+                value={manualCode}
+                onChange={(event) => setManualCode(event.target.value)}
+                placeholder="Pegar código QR"
+                className="h-9 text-sm"
+                disabled={isCheckingIn}
+              />
+              <Button type="submit" size="sm" disabled={isCheckingIn}>
+                <ScanLine data-icon="inline-start" />
+                Validar
+              </Button>
+            </form>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 function BarberAppointmentsView() {
   const now = new Date();
   const [selectedDateObj, setSelectedDateObj] = useState<Date>(now);
@@ -234,9 +386,11 @@ function BarberAppointmentsView() {
   const appointments = useQuery(api.appointments.listAppointments, { date: selectedDate });
   const cancelAppt = useMutation(api.appointments.cancelAppointment);
   const closeAppt = useMutation(api.appointments.closeAppointment);
+  const checkInByCode = useMutation(api.appointments.checkInByCode);
 
   const [cancelId, setCancelId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [isCheckingIn, setIsCheckingIn] = useState(false);
 
   const handleCancel = async () => {
     if (!cancelId) return;
@@ -259,14 +413,36 @@ function BarberAppointmentsView() {
     }
   };
 
+  const handleCheckIn = useCallback(async (rawCode: string) => {
+    const checkInCode = extractCheckInCode(rawCode);
+    if (!checkInCode) {
+      toast.error("El QR no contiene un código de check-in válido.");
+      return;
+    }
+
+    setIsCheckingIn(true);
+    try {
+      const result = await checkInByCode({ checkInCode });
+      toast.success(`Check-in registrado para ${result.clientName}`, {
+        description: `${result.serviceName} · ${new Date(result.startTime).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" })}`,
+      });
+    } catch (error: any) {
+      toast.error(error.message || "No se pudo registrar el check-in.");
+    } finally {
+      setIsCheckingIn(false);
+    }
+  }, [checkInByCode]);
+
   const statusBadge: Record<string, string> = {
     scheduled: "bg-blue-500/15 text-blue-500",
+    checked_in: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
     cancelled: "bg-red-500/15 text-red-500",
     closed: "bg-emerald-500/15 text-emerald-500",
   };
 
   const statusLabel: Record<string, string> = {
     scheduled: "Agendada",
+    checked_in: "Check-in",
     cancelled: "Cancelada",
     closed: "Finalizada",
   };
@@ -277,6 +453,8 @@ function BarberAppointmentsView() {
         <p className="text-[13px] font-semibold uppercase tracking-widest text-muted-foreground mb-0">Citas</p>
         <DatePicker value={selectedDateObj} onChange={handleDateChange} className="h-8 w-[150px] text-xs" />
       </div>
+
+      <CheckInScanner onCheckIn={handleCheckIn} isCheckingIn={isCheckingIn} />
 
       <Card className="overflow-hidden">
         <CardContent className="p-0">
@@ -291,7 +469,7 @@ function BarberAppointmentsView() {
               {(appointments as any[]).map((app) => (
                 <div
                   key={app._id}
-                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 transition-opacity ${app.status !== "scheduled" ? "opacity-50" : "hover:bg-muted/20"}`}
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 transition-opacity ${app.status === "cancelled" || app.status === "closed" ? "opacity-50" : "hover:bg-muted/20"}`}
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -307,14 +485,16 @@ function BarberAppointmentsView() {
                     </p>
                   </div>
 
-                  {app.status === "scheduled" && (
+                  {(app.status === "scheduled" || app.status === "checked_in") && (
                     <div className="flex gap-2 shrink-0">
                       <Button variant="outline" size="sm" className="h-8 text-[12px]" onClick={() => handleClose(app._id)}>
                         Finalizar
                       </Button>
-                      <Button variant="destructive" size="sm" className="h-8 text-[12px]" onClick={() => setCancelId(app._id)}>
-                        Cancelar
-                      </Button>
+                      {app.status === "scheduled" && (
+                        <Button variant="destructive" size="sm" className="h-8 text-[12px]" onClick={() => setCancelId(app._id)}>
+                          Cancelar
+                        </Button>
+                      )}
                     </div>
                   )}
                 </div>

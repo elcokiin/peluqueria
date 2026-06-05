@@ -111,14 +111,14 @@ function BarberBookingComponent() {
     
     setIsSubmitting(true);
     try {
-      await createAppointment({
+      const appointmentId = await createAppointment({
         barberId: barber._id,
         serviceId: selectedService._id,
         date: search.date,
         startTime: selectedTime,
       });
       toast.success('¡Cita reservada con éxito!');
-      navigate({ to: '/appointments' });
+      navigate({ to: '/appointment/$appointmentId', params: { appointmentId } });
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || 'Error al reservar la cita. Por favor intenta de nuevo.');

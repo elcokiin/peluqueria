@@ -73,9 +73,12 @@ export default defineSchema({
     totalDuration: v.number(),          // minutes
     status: v.union(
       v.literal("scheduled"),
+      v.literal("checked_in"),
       v.literal("cancelled"),
       v.literal("closed")
     ),
+    checkInCode: v.optional(v.string()),
+    checkedInAt: v.optional(v.number()),
     // Populated at close time
     extraServiceIds: v.optional(v.array(v.id("barberServices"))),
     finalPrice: v.optional(v.number()),
@@ -87,7 +90,8 @@ export default defineSchema({
     .index("by_client", ["clientId"])
     .index("by_barber_and_status", ["barberId", "status"])
     .index("by_status_and_startTime", ["status", "startTime"])
-    .index("by_status_and_notificationSent_and_startTime", ["status", "notificationSent", "startTime"]),
+    .index("by_status_and_notificationSent_and_startTime", ["status", "notificationSent", "startTime"])
+    .index("by_checkInCode", ["checkInCode"]),
 
   // 6. Email notification log (F4)
   notifications: defineTable({
