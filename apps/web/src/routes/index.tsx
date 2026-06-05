@@ -487,9 +487,11 @@ function BarberAppointmentsView() {
 
                   {(app.status === "scheduled" || app.status === "checked_in") && (
                     <div className="flex gap-2 shrink-0">
-                      <Button variant="outline" size="sm" className="h-8 text-[12px]" onClick={() => handleClose(app._id)}>
-                        Finalizar
-                      </Button>
+                      {app.status === "checked_in" && (
+                        <Button variant="outline" size="sm" className="h-8 text-[12px]" onClick={() => handleClose(app._id)}>
+                          Finalizar
+                        </Button>
+                      )}
                       {app.status === "scheduled" && (
                         <Button variant="destructive" size="sm" className="h-8 text-[12px]" onClick={() => setCancelId(app._id)}>
                           Cancelar

@@ -400,6 +400,9 @@ export const closeAppointment = mutation({
 
         if (target.status === "cancelled") throw new Error("Cannot close a cancelled appointment");
         if (target.status === "closed") throw new Error("Appointment is already closed");
+        if (target.status !== "checked_in") {
+            throw new Error("Client must check in with the QR code before closing the appointment");
+        }
 
         let finalPrice = 0;
         const primaryService = await ctx.db.get(target.serviceId);

@@ -1,5 +1,5 @@
 import { Authenticated, Unauthenticated, useMutation, useQuery } from "convex/react";
-import { createFileRoute, Link, Navigate } from "@tanstack/react-router";
+import { createFileRoute, Link, Navigate, useNavigate } from "@tanstack/react-router";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
 import type { Id } from "@v1_peluqueria/backend/convex/_generated/dataModel";
 import { Badge } from "@v1_peluqueria/ui/components/badge";
@@ -117,8 +117,8 @@ function MyAppointments() {
     const now = Date.now();
     const list = appointments ?? [];
     return {
-      upcoming: list.filter((app) => app.startTime >= now && app.status === "scheduled"),
-      history: list.filter((app) => app.startTime < now || app.status !== "scheduled"),
+      upcoming: list.filter((app) => app.startTime >= now && (app.status === "scheduled" || app.status === "checked_in")),
+      history: list.filter((app) => app.startTime < now || (app.status !== "scheduled" && app.status !== "checked_in")),
     };
   }, [appointments]);
 
@@ -285,14 +285,34 @@ function AppointmentSection({
 }
 
 function AppointmentCard({ appointment, onCancel }: { appointment: any; onCancel: (id: Id<"appointments">) => void }) {
+  const navigate = useNavigate();
   const statusLabel: Record<string, string> = {
     scheduled: "Agendada",
+    checked_in: "Check-in",
     cancelled: "Cancelada",
     closed: "Finalizada",
   };
 
+  const openAppointment = () => {
+    navigate({
+      to: "/appointment/$appointmentId",
+      params: { appointmentId: appointment._id },
+    });
+  };
+
   return (
-    <Card className="overflow-hidden">
+    <Card
+      className="overflow-hidden transition-colors hover:bg-muted/20"
+      role="button"
+      tabIndex={0}
+      onClick={openAppointment}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openAppointment();
+        }
+      }}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 space-y-2">
@@ -315,7 +335,15 @@ function AppointmentCard({ appointment, onCancel }: { appointment: any; onCancel
           </div>
 
           {appointment.status === "scheduled" && appointment.startTime > Date.now() && (
-            <Button size="icon" variant="outline" aria-label="Cancelar cita" onClick={() => onCancel(appointment._id)}>
+            <Button
+              size="icon"
+              variant="outline"
+              aria-label="Cancelar cita"
+              onClick={(event) => {
+                event.stopPropagation();
+                onCancel(appointment._id);
+              }}
+            >
               <X className="size-4" />
             </Button>
           )}
