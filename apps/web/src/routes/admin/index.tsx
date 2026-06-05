@@ -11,8 +11,10 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { MoreVertical, Check, X, Trash2 } from "lucide-react";
 
+import { Badge } from "@v1_peluqueria/ui/components/badge";
 import { Button } from "@v1_peluqueria/ui/components/button";
 import { Input } from "@v1_peluqueria/ui/components/input";
+import { Label } from "@v1_peluqueria/ui/components/label";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,12 +47,16 @@ function RouteComponent() {
   const removeBarber = useMutation(api.users.removeBarber);
   const [email, setEmail] = useState("");
   const [barberToDelete, setBarberToDelete] = useState<{id: string, isPending: boolean} | null>(null);
+  const normalizedEmail = email.trim().toLowerCase();
+  const emailIsInvalid = normalizedEmail.length > 0 && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail);
 
   const handleAddBarbero = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!normalizedEmail || emailIsInvalid) {
+      toast.error("Ingresa un correo válido para asignar el rol.");
+      return;
+    }
     try {
-      const normalizedEmail = email.trim().toLowerCase();
       const result = await addBarbero({ email: normalizedEmail });
       if (result?.status === "pending") {
         toast.success(`Barbero añadido a la lista de pendientes. Se les concederá acceso al registrarse.`);
@@ -92,26 +98,38 @@ function RouteComponent() {
         ) : profile?.role !== "admin" ? (
           <Navigate to="/" />
         ) : (
-          <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-8">
-            <section className="bg-card p-4 md:p-6 rounded-lg border">
-              <h2 className="text-xl font-semibold mb-4">Añadir un Barbero</h2>
-              <form onSubmit={handleAddBarbero} className="flex flex-col sm:flex-row gap-3">
-                <Input
-                  type="email"
-                  placeholder="barber@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full sm:max-w-sm"
-                  required
-                />
-                <Button type="submit" className="w-full sm:w-auto">Añadir Barbero</Button>
+          <div className="mx-auto flex max-w-2xl flex-col gap-8 p-4 pb-28 md:p-8">
+            <section className="rounded-lg border bg-card p-4 md:p-6">
+              <div className="mb-4">
+                <h1 className="text-2xl font-semibold tracking-tight">Panel de administración</h1>
+                <p className="mt-1 text-sm text-muted-foreground">Gestiona roles de barbero y acceso al panel instalado.</p>
+              </div>
+              <form onSubmit={handleAddBarbero} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                <div className="flex w-full flex-col gap-1.5 sm:max-w-sm">
+                  <Label htmlFor="barber-email">Correo del barbero</Label>
+                  <Input
+                    id="barber-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="email"
+                    placeholder="barber@example.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    aria-invalid={emailIsInvalid}
+                    required
+                  />
+                  {emailIsInvalid && (
+                    <p className="text-xs text-destructive">Usa un correo con formato nombre@dominio.com.</p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full sm:w-auto" disabled={!normalizedEmail || emailIsInvalid}>
+                  Añadir barbero
+                </Button>
               </form>
             </section>
 
             <section>
-              <h2 className="text-xl font-semibold mb-4">
-                Barberos y Administradores Actuales
-              </h2>
+              <h2 className="mb-4 text-xl font-semibold">Barberos y administradores actuales</h2>
               <div className="bg-card border rounded-lg overflow-hidden">
                 {barbers === undefined ? (
                   <div className="p-4 text-center text-muted-foreground">
@@ -134,21 +152,19 @@ function RouteComponent() {
                               {b.name || "Usuario Desconocido"}
                             </p>
                             {b.role === 'barber' && b.isActive !== false && (
-                              <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold bg-green-500/10 text-green-500 px-2 py-0.5 rounded-full">Activo</span>
+                              <Badge variant="secondary" className="shrink-0">Activo</Badge>
                             )}
                             {b.role === 'barber' && b.isActive === false && (
-                              <span className="shrink-0 text-[10px] uppercase tracking-wider font-semibold bg-red-500/10 text-red-500 px-2 py-0.5 rounded-full">Inactivo</span>
+                              <Badge variant="destructive" className="shrink-0">Inactivo</Badge>
                             )}
                           </div>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                             <p className="text-sm text-muted-foreground truncate">
                               {b.email}
                             </p>
-                            <span
-                              className={`shrink-0 px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-full font-medium ${b.role === "admin" ? "bg-primary/20 text-primary" : "bg-secondary text-secondary-foreground"}`}
-                            >
+                            <Badge variant={b.role === "admin" ? "default" : "secondary"} className="shrink-0">
                               {b.role === 'admin' ? 'ADMINISTRADOR' : 'BARBERO'}
-                            </span>
+                            </Badge>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -199,9 +215,9 @@ function RouteComponent() {
                             <p className="text-sm text-muted-foreground truncate">
                               {b.email}
                             </p>
-                            <span className="shrink-0 px-2 py-0.5 text-[10px] uppercase tracking-wider rounded-full font-medium bg-muted text-muted-foreground border">
+                            <Badge variant="outline" className="shrink-0">
                               BARBERO PENDIENTE
-                            </span>
+                            </Badge>
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
@@ -260,4 +276,3 @@ function RouteComponent() {
     </>
   );
 }
-

@@ -6,6 +6,8 @@ import { Moon, Sun } from "lucide-react";
 import UserMenu from "./user-menu";
 import { GoogleAuthButton } from "./google-auth-button";
 import { useEffect, useState } from "react";
+import { Button } from "@v1_peluqueria/ui/components/button";
+import { InstallAppButton } from "./install-app-button";
 
 export default function Header() {
   const user = useQuery(api.auth.getCurrentUser);
@@ -25,34 +27,37 @@ export default function Header() {
   };
   
   return (
-    <header className="sticky top-0 z-50 w-full bg-white shadow-sm dark:bg-background/95 dark:backdrop-blur dark:supports-[backdrop-filter]:bg-background/60 text-slate-900 dark:text-foreground">
+    <header className="sticky top-0 z-50 w-full border-b bg-background/95 text-foreground shadow-sm backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 relative">
         <div className="flex sm:hidden items-center w-full justify-between">
-          <Link to="/" className="flex items-center">
-            <div className="w-9 h-9 rounded-full bg-[#1A1A1A] text-white flex items-center justify-center font-bold text-[8px] leading-tight text-center tracking-tighter">
-              BARBER<br/>SHOP
-            </div>
+          <Link to="/" className="flex items-center gap-2" aria-label="Ir al inicio">
+            <img src="/icons/icon-192.png" alt="" className="size-9 rounded-lg bg-black object-cover" />
+            <span className="text-sm font-semibold tracking-tight">Kawz Barber</span>
           </Link>
           <div className="flex-1 flex justify-end gap-2 items-center">
+            <InstallAppButton compact />
             {mounted && (
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={toggleTheme}
-                className="flex items-center justify-center cursor-pointer text-slate-800 dark:text-foreground"
                 aria-label="Cambiar tema"
               >
                 {theme === "dark" ? (
-                  <Sun className="h-5 w-5" />
+                  <Sun />
                 ) : (
-                  <Moon className="h-5 w-5" />
+                  <Moon />
                 )}
-              </button>
+              </Button>
             )}
           </div>
         </div>
 
         <div className="hidden sm:flex items-center gap-6 md:gap-8 w-full">
           <Link to="/" className="flex items-center gap-2 font-bold">
-            <span className="text-xl">Peluquería</span>
+            <img src="/icons/icon-192.png" alt="" className="size-9 rounded-lg bg-black object-cover" />
+            <span className="text-xl">Kawz Barber</span>
           </Link>
 
           <nav className="hidden sm:flex items-center gap-6 text-sm font-medium text-muted-foreground mr-auto">
@@ -81,18 +86,21 @@ export default function Header() {
           </nav>
 
           <div className="flex flex-1 items-center justify-end gap-2">
+            <InstallAppButton compact />
             {mounted && (
-              <button
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
                 onClick={toggleTheme}
-                className="flex items-center justify-center cursor-pointer"
                 aria-label="Cambiar tema"
               >
                 {theme === "dark" ? (
-                  <Sun className="h-5 w-5" />
+                  <Sun />
                 ) : (
-                  <Moon className="h-5 w-5" />
+                  <Moon />
                 )}
-              </button>
+              </Button>
             )}
             {!isLoading && (
               user ? (

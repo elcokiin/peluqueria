@@ -7,8 +7,10 @@ import {
   useQuery,
   useMutation,
 } from "convex/react";
+import { Plus } from "lucide-react";
 import { useState } from "react";
 
+import { Badge } from "@v1_peluqueria/ui/components/badge";
 import { Button } from "@v1_peluqueria/ui/components/button";
 import { Input } from "@v1_peluqueria/ui/components/input";
 import { Label } from "@v1_peluqueria/ui/components/label";
@@ -82,17 +84,27 @@ function AdminServicesTab() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !defaultPrice || !defaultDuration) return;
+    const trimmedName = name.trim();
+    const trimmedDescription = description.trim();
+    if (!trimmedName || !defaultPrice || !defaultDuration) {
+      toast.error("Completa nombre, precio y duración.");
+      return;
+    }
 
     const numericPrice = Number(defaultPrice.replace(/\./g, ""));
+    const numericDuration = Number(defaultDuration);
+    if (numericPrice <= 0 || numericDuration < 5) {
+      toast.error("El precio debe ser mayor a cero y la duración mínima es 5 minutos.");
+      return;
+    }
 
     try {
       await upsertService({
         id: editingId as any || undefined,
-        name,
-        description,
+        name: trimmedName,
+        description: trimmedDescription,
         defaultPrice: numericPrice,
-        defaultDuration: Number(defaultDuration),
+        defaultDuration: numericDuration,
         isActive,
       });
       
@@ -127,8 +139,8 @@ function AdminServicesTab() {
         
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger render={<Button onClick={openForCreate} className="shrink-0" />}>
-            <span className="flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            <span className="flex items-center justify-center gap-1.5">
+              <Plus data-icon="inline-start" />
               Nuevo Servicio
             </span>
           </DialogTrigger>
@@ -143,23 +155,25 @@ function AdminServicesTab() {
             <form onSubmit={handleSave} className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Nombre del Servicio *</Label>
-                <Input 
-                  id="name" 
-                  value={name} 
-                  onChange={(e) => setName(e.target.value)} 
-                  placeholder="Ej: Corte Degradado (Fade)"
-                  required 
-                />
+                  <Input 
+                    id="name" 
+                    value={name} 
+                    onChange={(e) => setName(e.target.value)} 
+                    placeholder="Ej: Corte Degradado (Fade)"
+                    maxLength={80}
+                    required 
+                  />
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="desc">Descripción (Opcional)</Label>
-                <Input 
-                  id="desc" 
-                  value={description} 
-                  onChange={(e) => setDescription(e.target.value)} 
-                  placeholder="Breve descripción para el cliente" 
-                />
+                  <Input 
+                    id="desc" 
+                    value={description} 
+                    onChange={(e) => setDescription(e.target.value)} 
+                    placeholder="Breve descripción para el cliente" 
+                    maxLength={160}
+                  />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
@@ -238,9 +252,9 @@ function AdminServicesTab() {
                   <td className="px-4 py-3">${new Intl.NumberFormat("es-CL").format(service.defaultPrice)}</td>
                   <td className="px-4 py-3">{service.defaultDuration} min</td>
                   <td className="px-4 py-3 text-center">
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${service.isActive ? 'bg-green-100 text-green-800' : 'bg-zinc-100 text-zinc-800'}`}>
+                    <Badge variant={service.isActive ? "secondary" : "outline"}>
                       {service.isActive ? 'Activo' : 'Inactivo'}
-                    </span>
+                    </Badge>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Button variant="ghost" size="sm" onClick={() => openForEdit(service)} className="mr-1">

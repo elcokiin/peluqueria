@@ -1,21 +1,75 @@
 {
-  "name": "Barber Studio",
-  "short_name": "Barber",
-  "description": "Barber Studio Appointment App",
-  "start_url": "/",
+  "id": "/",
+  "name": "Kawz Barber Studio",
+  "short_name": "Kawz Barber",
+  "description": "Agenda PWA para clientes, barberos y administradores de Kawz Barber Studio.",
+  "lang": "es-CO",
+  "dir": "ltr",
+  "start_url": "/?source=pwa",
+  "scope": "/",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#ffffff",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
+  "orientation": "portrait-primary",
+  "background_color": "#0f0f10",
+  "theme_color": "#0f0f10",
+  "categories": ["business", "productivity", "lifestyle"],
   "icons": [
     {
-      "src": "/logo.jpg",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any"
     },
     {
-      "src": "/logo.jpg",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
-      "type": "image/jpeg"
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Agendar cita",
+      "short_name": "Agendar",
+      "description": "Elegir profesional, servicio, fecha y hora.",
+      "url": "/book?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Mis citas",
+      "short_name": "Citas",
+      "description": "Ver reservas y activar recordatorios.",
+      "url": "/appointments?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Panel del barbero",
+      "short_name": "Barbero",
+      "description": "Gestionar agenda, servicios y disponibilidad.",
+      "url": "/barber?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Administración",
+      "short_name": "Admin",
+      "description": "Gestionar barberos y catálogo.",
+      "url": "/admin?source=pwa-shortcut",
+      "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/mis-citas-pwa.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Vista móvil de citas y recordatorios PWA."
     }
   ]
 }

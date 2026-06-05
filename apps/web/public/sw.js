@@ -1,5 +1,17 @@
-const CACHE_NAME = "barberstudio-offline-v1";
-const APP_SHELL = ["/", "/barber", "/manifest.json", "/logo.jpg"];
+const CACHE_NAME = "barberstudio-offline-v2";
+const APP_SHELL = [
+  "/",
+  "/book",
+  "/appointments",
+  "/barber",
+  "/admin",
+  "/manifest.json",
+  "/logo.jpg",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "/icons/maskable-512.png",
+  "/screenshots/mis-citas-pwa.png",
+];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

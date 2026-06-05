@@ -3,9 +3,10 @@ import { useMutation, useQuery } from 'convex/react';
 import { api } from '@v1_peluqueria/backend/convex/_generated/api';
 import type { Id } from '@v1_peluqueria/backend/convex/_generated/dataModel';
 import { useState, useEffect, useMemo } from 'react';
+import { ArrowLeft, CheckCircle2, Clock, Scissors } from 'lucide-react';
 import { Button } from '@v1_peluqueria/ui/components/button';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogClose } from '@v1_peluqueria/ui/components/dialog';
-import { Card, CardContent } from '@v1_peluqueria/ui/components/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@v1_peluqueria/ui/components/card';
 import { Calendar } from '@v1_peluqueria/ui/components/calendar';
 import { Skeleton } from '@v1_peluqueria/ui/components/skeleton';
 import { GoogleAuthButton } from '@/components/google-auth-button';
@@ -149,10 +150,23 @@ function BarberBookingComponent() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      {/* Barber Carousel / Selection */}
-      <section className="border-b pb-6">
-        <h2 className="text-xl font-bold mb-4 text-foreground">1. Selecciona un Profesional</h2>
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-8 p-4 pb-28 md:p-8 md:pb-10">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agendar cita</p>
+          <h1 className="mt-1 text-2xl font-semibold text-foreground">Reserva con {barber.name}</h1>
+          <p className="mt-1 max-w-xl text-sm text-muted-foreground">
+            Completa los pasos en orden. Tu selección queda en la URL para que puedas volver sin perder el avance.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => navigate({ to: '/book' })} className="w-full sm:w-auto">
+          <ArrowLeft data-icon="inline-start" />
+          Cambiar profesional
+        </Button>
+      </div>
+
+      <section className="flex flex-col gap-4 border-b pb-6">
+        <h2 className="text-base font-semibold text-foreground">1. Profesional</h2>
         <div className="flex overflow-x-auto gap-4 pb-2 snap-x" style={{ scrollbarWidth: 'none' }}>
           {barbers.map((b, index) => {
             const isSelected = b._id === barber._id;
@@ -160,10 +174,11 @@ function BarberBookingComponent() {
               <button
                 key={b._id}
                 onClick={() => navigate({ to: '/book/$barberId', params: { barberId: b._id } })}
-                className={`group flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all snap-start min-w-[100px] sm:min-w-[120px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                aria-pressed={isSelected}
+                className={`group flex-shrink-0 flex flex-col items-center gap-2 p-4 rounded-lg border transition-all snap-start min-w-[100px] sm:min-w-[120px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
                   isSelected 
                     ? 'border-primary bg-primary/5' 
-                    : 'border-transparent bg-muted/30 hover:bg-muted/60 hover:border-primary/20'
+                    : 'border-border bg-card hover:bg-muted/60 hover:border-primary/20'
                 }`}
               >
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center overflow-hidden transition-all ${
@@ -187,8 +202,8 @@ function BarberBookingComponent() {
       </section>
 
       {/* Step 2: Services */}
-      <section>
-        <h2 className="text-xl font-semibold mb-4 text-foreground">2. Selecciona un Servicio</h2>
+      <section className="flex flex-col gap-4">
+        <h2 className="text-base font-semibold text-foreground">2. Servicio</h2>
         
         {services === undefined ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -197,29 +212,36 @@ function BarberBookingComponent() {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {services.map((service) => (
                 <button
                   key={service._id}
                   onClick={() => updateSearch({ serviceId: service._id, time: undefined })}
-                  className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+                  aria-pressed={selectedServiceId === service._id}
+                  className="text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <Card className={`transition-all h-full ${
                     selectedServiceId === service._id 
                       ? 'border-primary ring-1 ring-primary bg-primary/5' 
                       : 'hover:border-primary/50'
                   }`}>
-                    <CardContent className="p-4 sm:p-6 h-full flex flex-col justify-center">
+                    <CardContent className="flex h-full flex-col justify-center p-4 sm:p-6">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-medium text-foreground">{service.name}</h3>
-                          <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                          <h3 className="flex items-center gap-2 font-medium text-foreground">
+                            {selectedServiceId === service._id && <CheckCircle2 data-icon="inline-start" className="text-primary" />}
+                            {service.name}
+                          </h3>
+                          <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                             {service.description || 'Sin descripción'}
                           </p>
                         </div>
-                        <div className="text-right ml-4 shrink-0">
+                        <div className="ml-4 shrink-0 text-right">
                           <div className="font-semibold text-foreground">${new Intl.NumberFormat('es-CL').format(service.price)}</div>
-                          <div className="text-xs text-muted-foreground">{service.duration} min</div>
+                          <div className="flex items-center justify-end gap-1 text-xs text-muted-foreground">
+                            <Clock data-icon="inline-start" />
+                            {service.duration} min
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -228,7 +250,10 @@ function BarberBookingComponent() {
               ))}
             </div>
             {services.length === 0 && (
-              <p className="text-muted-foreground italic mt-4">Este barbero no tiene servicios disponibles aún.</p>
+              <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
+                <Scissors className="mx-auto mb-3" />
+                Este barbero no tiene servicios disponibles aún.
+              </div>
             )}
           </>
         )}
@@ -236,9 +261,13 @@ function BarberBookingComponent() {
 
       {/* Step 3: Date & Time */}
       {selectedServiceId && (
-        <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 pt-4 border-t">
-          <h2 className="text-xl font-semibold mb-4 text-foreground">3. Fecha y Hora</h2>
+        <section className="flex flex-col gap-4 border-t pt-4">
+          <h2 className="text-base font-semibold text-foreground">3. Fecha y hora</h2>
           <Card className="bg-muted/30 border-dashed">
+            <CardHeader>
+              <CardTitle>Disponibilidad</CardTitle>
+              <CardDescription>Elige una fecha disponible y luego un horario libre.</CardDescription>
+            </CardHeader>
             <CardContent className="p-6">
               <div className="flex flex-col md:flex-row gap-8">
                 <div className="flex-shrink-0 mx-auto md:mx-0">
@@ -313,7 +342,7 @@ function BarberBookingComponent() {
         <section className="animate-in fade-in slide-in-from-bottom-4 duration-500 pt-4 border-t flex justify-end">
           <Dialog>
             <DialogTrigger render={<Button size="lg" className="w-full sm:w-auto" />}>
-              Continuar a Confirmación
+              Continuar a confirmación
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px] overflow-y-auto max-h-[90vh]">
               <DialogTitle className="text-xl pb-2 border-b">Confirmar Reserva</DialogTitle>
@@ -321,7 +350,7 @@ function BarberBookingComponent() {
                 Revisa los detalles de tu cita antes de confirmar.
               </DialogDescription>
               
-              <div className="my-6 space-y-3 bg-muted/50 p-4 rounded-xl text-sm border border-border">
+              <div className="my-6 flex flex-col gap-3 bg-muted/50 p-4 rounded-xl text-sm border border-border">
                 <div className="flex justify-between items-center">
                   <span className="text-muted-foreground">Barbero:</span>
                   <span className="font-medium text-foreground">{barber.name}</span>
@@ -375,6 +404,6 @@ function BarberBookingComponent() {
           </Dialog>
         </section>
       )}
-    </div>
+    </main>
   );
 }

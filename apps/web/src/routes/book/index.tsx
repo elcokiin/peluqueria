@@ -1,9 +1,15 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
 import { useQuery } from 'convex/react';
 import { api } from '@v1_peluqueria/backend/convex/_generated/api';
-import { useEffect } from 'react';
-import { Card, CardContent } from '@v1_peluqueria/ui/components/card';
+import { ArrowRight, CalendarDays, Scissors } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@v1_peluqueria/ui/components/card';
 import { Skeleton } from '@v1_peluqueria/ui/components/skeleton';
+
+import avatar1 from '../../../assets/avatars/apple-avatar-1.jpeg';
+import avatar2 from '../../../assets/avatars/apple-avatar-2.jpeg';
+import avatar3 from '../../../assets/avatars/apple-avatar-3.jpeg';
+
+const AVATARS = [avatar1, avatar2, avatar3];
 
 export const Route = createFileRoute('/book/')({
   component: BookIndexComponent,
@@ -13,61 +19,73 @@ function BookIndexComponent() {
   const navigate = useNavigate();
   const barbers = useQuery(api.users.getPublicBarbers);
 
-  useEffect(() => {
-    // Auto-redirect to the first barber if available
-    if (barbers && barbers.length > 0) {
-      navigate({
-        to: '/book/$barberId',
-        params: { barberId: barbers[0]._id },
-        replace: true,
-      });
-    }
-  }, [barbers, navigate]);
-
   if (barbers === undefined) {
     return (
-      <div className="max-w-2xl mx-auto p-4 md:p-8 space-y-6">
-        <Skeleton className="h-10 w-64 mx-auto mb-8" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 pb-28 md:p-8">
+        <div className="flex flex-col gap-2">
+          <Skeleton className="h-8 w-56" />
+          <Skeleton className="h-4 w-full max-w-md" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Skeleton className="h-32 w-full rounded-xl" />
           <Skeleton className="h-32 w-full rounded-xl" />
         </div>
-      </div>
+      </main>
     );
   }
 
   if (barbers.length === 0) {
     return (
-      <div className="p-12 text-center flex flex-col items-center">
+      <main className="mx-auto flex min-h-[50vh] max-w-xl flex-col items-center justify-center px-6 text-center">
+        <Scissors className="mb-3 text-muted-foreground" />
         <h2 className="text-xl font-semibold text-foreground">No hay barberos disponibles</h2>
-        <p className="text-muted-foreground mt-2">Vuelve a intentarlo más tarde.</p>
-      </div>
+        <p className="mt-2 text-sm text-muted-foreground">Vuelve a intentarlo más tarde o revisa tus citas existentes.</p>
+      </main>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-4 md:p-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground">Selecciona un Profesional</h1>
+    <main className="mx-auto flex w-full max-w-3xl flex-col gap-6 p-4 pb-28 md:p-8 md:pb-10">
+      <header className="flex flex-col gap-2">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Agendar cita</p>
+        <h1 className="text-2xl font-semibold text-foreground">Elige el profesional</h1>
+        <p className="max-w-xl text-sm text-muted-foreground">
+          Después podrás seleccionar servicio, fecha, horario y confirmar la reserva.
+        </p>
       </header>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {barbers.map((barber) => (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {barbers.map((barber, index) => (
           <button
             key={barber._id}
             onClick={() => navigate({ to: '/book/$barberId', params: { barberId: barber._id } })}
-            className="text-left block w-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-xl"
+            className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            <Card className="hover:border-primary/50 transition-colors h-full">
-              <CardContent className="p-6 flex flex-col items-center justify-center space-y-4">
-                <div className="w-16 h-16 bg-primary/10 text-primary rounded-full flex items-center justify-center text-2xl font-bold">
-                  {barber.name?.[0]?.toUpperCase() || 'B'}
+            <Card className="h-full transition-colors hover:ring-primary/50">
+              <CardHeader className="flex-row items-center gap-4">
+                <img
+                  src={AVATARS[index % AVATARS.length]}
+                  alt=""
+                  className="size-14 rounded-full object-cover"
+                />
+                <div className="min-w-0">
+                  <CardTitle className="truncate text-base">{barber.name}</CardTitle>
+                  <CardDescription>Profesional disponible</CardDescription>
                 </div>
-                <span className="text-lg font-medium text-foreground">{barber.name}</span>
+              </CardHeader>
+              <CardContent className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <CalendarDays data-icon="inline-start" />
+                  Ver agenda
+                </div>
+                <span className="inline-flex h-7 items-center justify-center gap-1 rounded-none bg-primary px-2.5 text-xs font-medium text-primary-foreground">
+                  Continuar
+                  <ArrowRight data-icon="inline-end" />
+                </span>
               </CardContent>
             </Card>
           </button>
         ))}
       </div>
-    </div>
+    </main>
   );
 }

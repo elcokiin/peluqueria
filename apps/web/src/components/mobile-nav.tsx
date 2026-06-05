@@ -16,8 +16,6 @@ import { useEffect, useRef } from "react";
 
 export default function MobileNav() {
   const profile = useQuery(api.users.currentProfile);
-  const barbers = useQuery(api.users.getPublicBarbers);
-  const firstBarberId = barbers?.[0]?._id;
   const isLoading = profile === undefined;
   const navigate = useNavigate();
   const location = useLocation();
@@ -35,7 +33,7 @@ export default function MobileNav() {
     const getRoutesForRole = (r: string) => {
       if (r === "admin") return ["/", "/admin", "/admin/services"];
       if (r === "barber") return ["/", "/barber"];
-      return ["/", firstBarberId ? `/book/${firstBarberId}` : "/book", "/appointments"];
+      return ["/", "/book", "/appointments"];
     };
 
     const routes = getRoutesForRole(role);
@@ -95,7 +93,7 @@ export default function MobileNav() {
       document.removeEventListener("touchmove", onTouchMove);
       document.removeEventListener("touchend", onTouchEnd);
     };
-  }, [role, location.pathname, navigate, firstBarberId]);
+  }, [role, location.pathname, navigate]);
 
   return (
     <div
@@ -112,32 +110,17 @@ export default function MobileNav() {
       </Link>
 
       {(!profile || role === "user") && (
-        firstBarberId ? (
-          <Link
-            to="/book/$barberId"
-            params={{ barberId: firstBarberId }}
-            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
-              location.pathname.startsWith('/book')
-                ? 'text-primary bg-primary/10 font-medium'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Calendar className="h-5 w-5" />
-            <span className="text-[10px]">Agendar</span>
-          </Link>
-        ) : (
-          <Link
-            to="/book"
-            className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
-              location.pathname.startsWith('/book')
-                ? 'text-primary bg-primary/10 font-medium'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Calendar className="h-5 w-5" />
-            <span className="text-[10px]">Agendar</span>
-          </Link>
-        )
+        <Link
+          to="/book"
+          className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-xl transition-all ${
+            location.pathname.startsWith('/book')
+              ? 'text-primary bg-primary/10 font-medium'
+              : 'text-muted-foreground hover:text-foreground'
+          }`}
+        >
+          <Calendar className="h-5 w-5" />
+          <span className="text-[10px]">Agendar</span>
+        </Link>
       )}
 
       {(!profile || role === "user") && (
