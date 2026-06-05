@@ -56,11 +56,15 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
   component: RootDocument,
   beforeLoad: async (ctx) => {
-    const token = await getAuth();
-    if (token) {
-      ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+    try {
+      const token = await getAuth();
+      if (token) {
+        ctx.context.convexQueryClient.serverHttpClient?.setAuth(token);
+      }
+      return { isAuthenticated: !!token, token };
+    } catch {
+      return { isAuthenticated: false, token: null };
     }
-    return { isAuthenticated: !!token, token };
   },
 });
 
@@ -84,7 +88,6 @@ function RootDocument() {
             initialToken={context.token}
           >
             <div className="grid h-svh grid-rows-[auto_1fr_auto] sm:grid-rows-[auto_1fr]">
-              <PwaServiceWorkerRegistrar />
               <Header />
               <div className="overflow-y-auto">
                 <Outlet />
@@ -99,16 +102,4 @@ function RootDocument() {
       </body>
     </html>
   );
-}
-
-function PwaServiceWorkerRegistrar() {
-  useEffect(() => {
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch((error) => {
-        console.error("Service worker registration failed:", error);
-      });
-    }
-  }, []);
-
-  return null;
 }

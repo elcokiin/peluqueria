@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useQuery, useMutation, Authenticated, Unauthenticated, AuthLoading } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
 import { Camera, Facebook, Instagram, Plus, ScanLine, X } from "lucide-react";
 import { toast } from "sonner";
@@ -557,34 +557,37 @@ function BarberAppointmentsView() {
 }
 
 function RouteComponent() {
+  const isOnline = useNetworkStatus();
   const profile = useQuery(api.users.currentProfile);
-  const activeRole = profile?.activeRole;
+  const cachedProfile = useOfflineQueryCache("current-profile", profile);
+  const effectiveProfile = profile === undefined ? cachedProfile?.data : profile;
+  const activeRole = effectiveProfile?.activeRole;
 
   const showLanding = !activeRole || activeRole === "user";
 
+  if (profile === undefined && !effectiveProfile && isOnline) {
+    return (
+      <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
+        Cargando...
+      </div>
+    );
+  }
+
+  if (profile === undefined && !effectiveProfile && !isOnline) {
+    return (
+      <div className="flex h-screen items-center justify-center px-6 text-center text-sm text-muted-foreground">
+        Sin conexión. Abre la agenda una vez con internet para guardarla en este dispositivo.
+      </div>
+    );
+  }
+
   return (
-    <>
-      <Authenticated>
-        {profile === undefined ? (
-          <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
-            Cargando...
-          </div>
-        ) : showLanding ? (
-          <HomeComponent />
-        ) : (
-          <div className="max-w-xl mx-auto pb-28">
-            <BarberAppointmentsView />
-          </div>
-        )}
-      </Authenticated>
-      <Unauthenticated>
-        <HomeComponent />
-      </Unauthenticated>
-      <AuthLoading>
-        <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
-          Cargando...
-        </div>
-      </AuthLoading>
-    </>
+    showLanding ? (
+      <HomeComponent />
+    ) : (
+      <div className="max-w-xl mx-auto pb-28">
+        <BarberAppointmentsView />
+      </div>
+    )
   );
 }

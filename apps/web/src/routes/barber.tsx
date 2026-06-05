@@ -1,9 +1,6 @@
 import { createFileRoute, Navigate } from "@tanstack/react-router";
 import { api } from "@v1_peluqueria/backend/convex/_generated/api";
 import {
-  Authenticated,
-  AuthLoading,
-  Unauthenticated,
   useQuery,
   useMutation,
 } from "convex/react";
@@ -602,37 +599,40 @@ function BarberBlocksTab() {
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 function RouteComponent() {
+  const isOnline = useNetworkStatus();
   const profile = useQuery(api.users.currentProfile);
+  const cachedProfile = useOfflineQueryCache("current-profile", profile);
+  const effectiveProfile = profile === undefined ? cachedProfile?.data : profile;
+
+  if (profile === undefined && !effectiveProfile && isOnline) {
+    return (
+      <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
+        Cargando...
+      </div>
+    );
+  }
+
+  if (profile === undefined && !effectiveProfile && !isOnline) {
+    return (
+      <div className="flex h-screen items-center justify-center px-6 text-center text-sm text-muted-foreground">
+        Sin conexión. Abre el panel del barbero una vez con internet para guardar el horario en este dispositivo.
+      </div>
+    );
+  }
 
   return (
-    <>
-      <Authenticated>
-        {profile === undefined ? (
-          <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
-            Cargando...
-          </div>
-        ) : !profile || (profile.role !== "barber" && profile.role !== "admin") ? (
-          <Navigate to="/" />
-        ) : (
-          <div className="max-w-xl mx-auto px-4 py-8 space-y-10 pb-28">
-            <div>
-              <h1 className="text-xl font-bold tracking-tight">Panel del Barbero</h1>
-              <p className="text-[13px] text-muted-foreground mt-1">Gestiona tu agenda, servicios y disponibilidad.</p>
-            </div>
-            <BarberServicesTab />
-            <BarberScheduleTab />
-            <BarberBlocksTab />
-          </div>
-        )}
-      </Authenticated>
-      <Unauthenticated>
-        <Navigate to="/" />
-      </Unauthenticated>
-      <AuthLoading>
-        <div className="flex h-screen items-center justify-center text-sm text-muted-foreground">
-          Cargando...
+    !effectiveProfile || (effectiveProfile.role !== "barber" && effectiveProfile.role !== "admin") ? (
+      <Navigate to="/" />
+    ) : (
+      <div className="max-w-xl mx-auto px-4 py-8 space-y-10 pb-28">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">Panel del Barbero</h1>
+          <p className="text-[13px] text-muted-foreground mt-1">Gestiona tu agenda, servicios y disponibilidad.</p>
         </div>
-      </AuthLoading>
-    </>
+        <BarberServicesTab />
+        <BarberScheduleTab />
+        <BarberBlocksTab />
+      </div>
+    )
   );
 }
