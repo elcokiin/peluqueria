@@ -13,7 +13,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@v1_peluqueria/ui/components/theme-provider";
-import { useEffect } from "react";
 
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
