@@ -19,6 +19,8 @@ import { Bell, CalendarClock, CalendarPlus, Scissors, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
+import { canUseServiceWorker, getServiceWorkerRegistration } from "@/lib/service-worker";
+
 export const Route = createFileRoute("/appointments")({
   component: AppointmentsRoute,
 });
@@ -48,7 +50,7 @@ function formatDateTime(timestamp: number) {
 }
 
 function scheduleLocalReminders(appointments: any[] | undefined) {
-  if (!appointments || typeof window === "undefined" || !("serviceWorker" in navigator)) return () => {};
+  if (!appointments || !canUseServiceWorker()) return () => {};
   if (!("Notification" in window) || Notification.permission !== "granted") return () => {};
 
   const timers: number[] = [];
@@ -63,7 +65,8 @@ function scheduleLocalReminders(appointments: any[] | undefined) {
     if (appointment.startTime <= now || delay > LOCAL_REMINDER_HORIZON_MS) continue;
 
     const timer = window.setTimeout(async () => {
-      const registration = await navigator.serviceWorker.ready;
+      const registration = await getServiceWorkerRegistration();
+      if (!registration) return;
       await registration.showNotification("Tu cita está cerca", {
         body: `${appointment.serviceName} con ${appointment.barberName} a las ${formatDateTime(appointment.startTime)}.`,
         icon: "/logo.jpg",
@@ -106,6 +109,8 @@ function MyAppointments() {
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (!canUseServiceWorker()) return;
+
     if (Notification.permission === "granted") {
       setPushStatus(vapidPublicKey ? "enabled" : "local");
     } else if (Notification.permission === "denied") {
@@ -123,9 +128,9 @@ function MyAppointments() {
   }, [appointments]);
 
   const enableNotifications = async () => {
-    if (!("serviceWorker" in navigator) || !("Notification" in window)) {
+    if (!canUseServiceWorker() || !("Notification" in window)) {
       setPushStatus("unsupported");
-      toast.error("Este navegador no soporta notificaciones PWA.");
+      toast.error("Las notificaciones PWA están disponibles en el build de producción.");
       return;
     }
 
@@ -135,7 +140,12 @@ function MyAppointments() {
       return;
     }
 
-    const registration = await navigator.serviceWorker.register("/sw.js");
+    const registration = await getServiceWorkerRegistration();
+    if (!registration) {
+      setPushStatus("unsupported");
+      toast.error("No se pudo activar el service worker de la PWA.");
+      return;
+    }
 
     if (!vapidPublicKey || !("PushManager" in window)) {
       setPushStatus("local");

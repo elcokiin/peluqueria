@@ -14,6 +14,17 @@ const APP_SHELL = [
   "/screenshots/mis-citas-pwa.png",
 ];
 
+const VITE_DEV_PREFIXES = ["/src/", "/@vite/", "/@react-refresh", "/node_modules/", "/__vite_ping"];
+
+function isViteDevRequest(url) {
+  const isLocalhost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+  return isLocalhost && VITE_DEV_PREFIXES.some((prefix) => url.pathname.startsWith(prefix));
+}
+
+function canCacheResponse(response) {
+  return response && response.ok && response.type === "basic";
+}
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
@@ -38,13 +49,16 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  if (isViteDevRequest(url)) return;
 
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
         .then((response) => {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          if (canCacheResponse(response)) {
+            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
+          }
           return response;
         })
         .catch(async () => {
@@ -59,13 +73,16 @@ self.addEventListener("fetch", (event) => {
     caches.match(request).then((cached) => {
       const network = fetch(request)
         .then((response) => {
-          if (response.ok) {
+          if (canCacheResponse(response)) {
             const copy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           }
           return response;
         })
-        .catch(() => cached);
+        .catch((error) => {
+          if (cached) return cached;
+          throw error;
+        });
 
       return cached || network;
     })
