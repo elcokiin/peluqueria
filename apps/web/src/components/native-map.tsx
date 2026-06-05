@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import type * as Leaflet from "leaflet";
 
 const TILE_URL = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 const TILE_ATTRIBUTION =
@@ -26,7 +25,7 @@ function formatDuration(seconds: number): string {
   return `${h} h ${m} min`;
 }
 
-function createPinIcon(theme: "light" | "dark") {
+function createPinIcon(L: typeof Leaflet, theme: "light" | "dark") {
   const isDark = theme === "dark";
   const ringColor = isDark ? "#0a0a0a" : "#ffffff";
   const shadow = isDark
@@ -56,7 +55,7 @@ function createPinIcon(theme: "light" | "dark") {
   });
 }
 
-function createUserIcon(theme: "light" | "dark") {
+function createUserIcon(L: typeof Leaflet, theme: "light" | "dark") {
   const isDark = theme === "dark";
   const fill = "#3b82f6";
   return L.divIcon({
@@ -94,58 +93,71 @@ export default function NativeMap({
   onError,
 }: NativeMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<L.Map | null>(null);
-  const userMarkerRef = useRef<L.Marker | null>(null);
-  const routeLineRef = useRef<L.Polyline | null>(null);
+  const mapRef = useRef<Leaflet.Map | null>(null);
+  const userMarkerRef = useRef<Leaflet.Marker | null>(null);
+  const routeLineRef = useRef<Leaflet.Polyline | null>(null);
+  const leafletRef = useRef<typeof Leaflet | null>(null);
   const [ready, setReady] = useState(false);
   const [routing, setRouting] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    let cancelled = false;
 
-    const map = L.map(containerRef.current, {
-      center,
-      zoom,
-      zoomControl: false,
-      attributionControl: true,
-      scrollWheelZoom: false,
-      dragging: true,
-      doubleClickZoom: true,
-      touchZoom: true,
-    });
+    (async () => {
+      const L = (await import("leaflet")).default;
+      await import("leaflet/dist/leaflet.css");
+      if (cancelled || !containerRef.current) return;
 
-    L.tileLayer(TILE_URL, {
-      attribution: TILE_ATTRIBUTION,
-      maxZoom: 19,
-      crossOrigin: true,
-    }).addTo(map);
+      leafletRef.current = L;
 
-    L.marker(center, { icon: createPinIcon(theme), title: "Kawz Barber Studio" })
-      .addTo(map)
-      .bindPopup(
-        `<div style="font-family:Inter,system-ui,sans-serif;min-width:170px;">
-           <strong style="font-size:13px;color:#0a0a0a;">Kawz Barber Studio</strong><br/>
-           <span style="font-size:11px;color:#555;">Avenida Universitaria 47-12</span><br/>
-           <span style="font-size:11px;color:#555;">Tunja, Boyacá</span>
-         </div>`
-      );
+      const map = L.map(containerRef.current, {
+        center,
+        zoom,
+        zoomControl: false,
+        attributionControl: true,
+        scrollWheelZoom: false,
+        dragging: true,
+        doubleClickZoom: true,
+        touchZoom: true,
+      });
 
-    L.control.zoom({ position: "bottomright" }).addTo(map);
+      L.tileLayer(TILE_URL, {
+        attribution: TILE_ATTRIBUTION,
+        maxZoom: 19,
+        crossOrigin: true,
+      }).addTo(map);
 
-    mapRef.current = map;
-    setReady(true);
+      L.marker(center, { icon: createPinIcon(L, theme), title: "Kawz Barber Studio" })
+        .addTo(map)
+        .bindPopup(
+          `<div style="font-family:Inter,system-ui,sans-serif;min-width:170px;">
+             <strong style="font-size:13px;color:#0a0a0a;">Kawz Barber Studio</strong><br/>
+             <span style="font-size:11px;color:#555;">Avenida Universitaria 47-12</span><br/>
+             <span style="font-size:11px;color:#555;">Tunja, Boyacá</span>
+           </div>`
+        );
 
-    requestAnimationFrame(() => {
-      map.invalidateSize();
-    });
+      L.control.zoom({ position: "bottomright" }).addTo(map);
 
-    const onResize = () => map.invalidateSize();
-    window.addEventListener("resize", onResize);
+      mapRef.current = map;
+      setReady(true);
+
+      requestAnimationFrame(() => {
+        map.invalidateSize();
+      });
+
+      const onResize = () => map.invalidateSize();
+      window.addEventListener("resize", onResize);
+    })();
 
     return () => {
-      window.removeEventListener("resize", onResize);
-      map.remove();
-      mapRef.current = null;
+      cancelled = true;
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+      leafletRef.current = null;
     };
   }, []);
 
@@ -156,13 +168,14 @@ export default function NativeMap({
   }, [center[0], center[1], zoom]);
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !leafletRef.current) return;
+    const L = leafletRef.current;
     mapRef.current.eachLayer((layer) => {
       if (layer instanceof L.Marker && layer.options.title === "Kawz Barber Studio") {
-        layer.setIcon(createPinIcon(theme));
+        layer.setIcon(createPinIcon(L, theme));
       }
       if (layer instanceof L.Marker && layer.options.title === "user-location") {
-        layer.setIcon(createUserIcon(theme));
+        layer.setIcon(createUserIcon(L, theme));
       }
     });
   }, [theme]);
@@ -183,7 +196,9 @@ export default function NativeMap({
   };
 
   useEffect(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !leafletRef.current) return;
+    const L = leafletRef.current;
+
     if (!showRoute) {
       if (routeLineRef.current) {
         mapRef.current.removeLayer(routeLineRef.current);
@@ -211,7 +226,7 @@ export default function NativeMap({
           userMarkerRef.current.setLatLng(userPos);
         } else {
           userMarkerRef.current = L.marker(userPos, {
-            icon: createUserIcon(theme),
+            icon: createUserIcon(L, theme),
             title: "user-location",
           })
             .addTo(mapRef.current)
@@ -268,7 +283,9 @@ export default function NativeMap({
   }, [showRoute]);
 
   const locateUser = () => {
-    if (!mapRef.current) return;
+    if (!mapRef.current || !leafletRef.current) return;
+    const L = leafletRef.current;
+
     if (!navigator.geolocation) {
       onError?.("Tu dispositivo no soporta geolocalización.");
       return;
@@ -281,7 +298,7 @@ export default function NativeMap({
           userMarkerRef.current.setLatLng(userPos);
         } else {
           userMarkerRef.current = L.marker(userPos, {
-            icon: createUserIcon(theme),
+            icon: createUserIcon(L, theme),
             title: "user-location",
           })
             .addTo(mapRef.current)
