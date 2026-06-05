@@ -31,7 +31,7 @@ export default function Header() {
       <div className="container mx-auto flex h-14 max-w-screen-2xl items-center justify-between px-4 sm:px-6 relative">
         <div className="flex sm:hidden items-center w-full justify-between">
           <Link to="/" className="flex items-center gap-2" aria-label="Ir al inicio">
-            <img src="/icons/icon-192.png" alt="" className="size-9 rounded-lg bg-black object-cover" />
+            <img src="/icons/app-icon.svg" alt="" className="size-9 rounded-lg bg-black object-cover" />
             <span className="text-sm font-semibold tracking-tight">Kawz Barber</span>
           </Link>
           <div className="flex-1 flex justify-end gap-2 items-center">
@@ -56,7 +56,7 @@ export default function Header() {
 
         <div className="hidden sm:flex items-center gap-6 md:gap-8 w-full">
           <Link to="/" className="flex items-center gap-2 font-bold">
-            <img src="/icons/icon-192.png" alt="" className="size-9 rounded-lg bg-black object-cover" />
+            <img src="/icons/app-icon.svg" alt="" className="size-9 rounded-lg bg-black object-cover" />
             <span className="text-xl">Kawz Barber</span>
           </Link>
 
