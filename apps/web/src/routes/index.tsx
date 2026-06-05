@@ -27,6 +27,8 @@ import avatar1 from '../../assets/avatars/apple-avatar-1.jpeg';
 import avatar2 from '../../assets/avatars/apple-avatar-2.jpeg';
 import avatar3 from '../../assets/avatars/apple-avatar-3.jpeg';
 
+import LocationMap from "../components/location-map";
+
 const AVATARS = [avatar1, avatar2, avatar3];
 
 export const Route = createFileRoute("/")({
@@ -159,7 +161,7 @@ function HomeComponent() {
 
         {/* Catalog */}
         <div className="mt-4 px-4 pb-8">
-          <h2 className="mb-4 px-1 text-[14px] font-medium text-foreground">
+          <h2 className="mb-4 px-1 text-[14px] font-medium text-slate-800 dark:text-foreground">
             {selectedBarberId ? "Servicios ofrecidos por este profesional" : "Selecciona los servicios que deseas agendar"}
           </h2>
 
@@ -174,13 +176,13 @@ function HomeComponent() {
             ) : (
               <Accordion type="multiple" defaultValue={["Barbas"]} className="flex w-full flex-col gap-4">
                 {activeCategories.map(([category, items]) => (
-                  <AccordionItem value={category} key={category} className="overflow-hidden rounded-[0.8rem] border bg-card shadow-sm px-0">
+                  <AccordionItem value={category} key={category} className="overflow-hidden rounded-[0.8rem] border border-border bg-card shadow-sm px-0">
                     <AccordionTrigger className="border-none px-4 py-4 text-[15px] font-semibold hover:bg-muted/50 hover:no-underline">
                       {category}
                     </AccordionTrigger>
-                    <AccordionContent className="flex flex-col gap-4 border-t bg-background px-4 pb-4 pt-4">
+                    <AccordionContent className="flex flex-col gap-4 border-t border-border bg-background px-4 pb-4 pt-4">
                       {items.map((service: any, idx: number) => (
-                        <Card key={`${service.serviceId}-${idx}`} className="relative overflow-hidden rounded-[0.8rem] p-0 shadow-sm border-border bg-card">
+                        <Card key={`${service.serviceId}-${idx}`} className="relative overflow-hidden rounded-[0.8rem] border-border p-0 shadow-none">
                           <Badge variant="secondary" className="absolute left-0 top-0 rounded-none rounded-br-[0.8rem] bg-emerald-600 px-3 py-1.5 text-[10px] font-medium text-white hover:bg-emerald-700">
                             Descuento pagando en línea
                           </Badge>
@@ -211,6 +213,8 @@ function HomeComponent() {
               </Accordion>
             )}
           </div>
+
+          <LocationMap />
         </div>
       </div>
     </div>
