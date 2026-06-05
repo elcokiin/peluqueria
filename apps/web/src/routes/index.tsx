@@ -5,6 +5,7 @@ import { api } from "@v1_peluqueria/backend/convex/_generated/api";
 import { Camera, Facebook, Instagram, Plus, ScanLine, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { OfflineSupportNotice } from "@/components/offline-support-notice";
 import { useNetworkStatus } from "@/hooks/use-network-status";
 import { useOfflineQueryCache } from "@/hooks/use-offline-query-cache";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@v1_peluqueria/ui/components/accordion";
@@ -474,12 +475,7 @@ function BarberAppointmentsView() {
       <CheckInScanner onCheckIn={handleCheckIn} isCheckingIn={isCheckingIn || !isOnline} />
 
       {(!isOnline || isUsingCachedAppointments) && (
-        <div className="rounded-xl border border-amber-400/30 bg-amber-500/5 px-4 py-3 text-[12px] text-muted-foreground">
-          <span className="font-medium text-amber-600 dark:text-amber-400">Modo offline.</span>{" "}
-          Mostrando la última agenda guardada
-          {cachedAppointments ? ` (${new Date(cachedAppointments.savedAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })})` : ""}.
-          Los cambios se habilitan al recuperar conectividad.
-        </div>
+        <OfflineSupportNotice variant="appointments" savedAt={cachedAppointments?.savedAt} />
       )}
 
       <Card className="overflow-hidden">

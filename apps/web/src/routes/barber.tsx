@@ -7,6 +7,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { OfflineSupportNotice } from "@/components/offline-support-notice";
 import { useNetworkStatus } from "@/hooks/use-network-status";
 import { useOfflineQueryCache } from "@/hooks/use-offline-query-cache";
 import { Button } from "@v1_peluqueria/ui/components/button";
@@ -348,12 +349,7 @@ function BarberScheduleTab() {
       <p className={sectionTitle}>Horario Semanal</p>
 
       {(!isOnline || isUsingCachedSchedule) && (
-        <div className="rounded-xl border border-amber-400/30 bg-amber-500/5 px-4 py-3 text-[12px] text-muted-foreground">
-          <span className="font-medium text-amber-600 dark:text-amber-400">Modo offline.</span>{" "}
-          Mostrando el último horario semanal guardado
-          {cachedSchedule ? ` (${new Date(cachedSchedule.savedAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })})` : ""}.
-          La edición se habilita al recuperar conectividad.
-        </div>
+        <OfflineSupportNotice variant="schedule" savedAt={cachedSchedule?.savedAt} />
       )}
 
       {/* Day list */}
@@ -629,6 +625,7 @@ function RouteComponent() {
           <h1 className="text-xl font-bold tracking-tight">Panel del Barbero</h1>
           <p className="text-[13px] text-muted-foreground mt-1">Gestiona tu agenda, servicios y disponibilidad.</p>
         </div>
+        {!isOnline && <OfflineSupportNotice variant="barber" savedAt={cachedProfile?.savedAt} />}
         <BarberServicesTab />
         <BarberScheduleTab />
         <BarberBlocksTab />
