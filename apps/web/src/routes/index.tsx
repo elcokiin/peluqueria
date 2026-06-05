@@ -5,6 +5,8 @@ import { api } from "@v1_peluqueria/backend/convex/_generated/api";
 import { Camera, Facebook, Instagram, Plus, ScanLine, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { useNetworkStatus } from "@/hooks/use-network-status";
+import { useOfflineQueryCache } from "@/hooks/use-offline-query-cache";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@v1_peluqueria/ui/components/accordion";
 import { Card, CardContent } from "@v1_peluqueria/ui/components/card";
 import { Badge } from "@v1_peluqueria/ui/components/badge";
@@ -370,6 +372,7 @@ function CheckInScanner({
 }
 
 function BarberAppointmentsView() {
+  const isOnline = useNetworkStatus();
   const now = new Date();
   const [selectedDateObj, setSelectedDateObj] = useState<Date>(now);
   
@@ -383,7 +386,10 @@ function BarberAppointmentsView() {
     }
   };
 
-  const appointments = useQuery(api.appointments.listAppointments, { date: selectedDate });
+  const liveAppointments = useQuery(api.appointments.listAppointments, { date: selectedDate });
+  const cachedAppointments = useOfflineQueryCache(`barber-appointments:${selectedDate}`, liveAppointments);
+  const appointments = liveAppointments ?? cachedAppointments?.data;
+  const isUsingCachedAppointments = liveAppointments === undefined && cachedAppointments !== null;
   const cancelAppt = useMutation(api.appointments.cancelAppointment);
   const closeAppt = useMutation(api.appointments.closeAppointment);
   const checkInByCode = useMutation(api.appointments.checkInByCode);
@@ -394,6 +400,7 @@ function BarberAppointmentsView() {
 
   const handleCancel = async () => {
     if (!cancelId) return;
+    if (!isOnline) { toast.error("Sin conexión. La cancelación se sincroniza cuando recuperes internet."); return; }
     if (!cancelReason.trim()) { toast.error("El motivo de cancelación es obligatorio."); return; }
     try {
       await cancelAppt({ appointmentId: cancelId as any, reason: cancelReason });
@@ -405,6 +412,7 @@ function BarberAppointmentsView() {
   };
 
   const handleClose = async (id: string) => {
+    if (!isOnline) { toast.error("Sin conexión. La finalización se sincroniza cuando recuperes internet."); return; }
     try {
       await closeAppt({ appointmentId: id as any, extraServiceIds: [] });
       toast.success("Cita marcada como finalizada.");
@@ -414,6 +422,11 @@ function BarberAppointmentsView() {
   };
 
   const handleCheckIn = useCallback(async (rawCode: string) => {
+    if (!isOnline) {
+      toast.error("Sin conexión. El check-in se habilita al recuperar internet.");
+      return;
+    }
+
     const checkInCode = extractCheckInCode(rawCode);
     if (!checkInCode) {
       toast.error("El QR no contiene un código de check-in válido.");
@@ -431,7 +444,7 @@ function BarberAppointmentsView() {
     } finally {
       setIsCheckingIn(false);
     }
-  }, [checkInByCode]);
+  }, [checkInByCode, isOnline]);
 
   const statusBadge: Record<string, string> = {
     scheduled: "bg-blue-500/15 text-blue-500",
@@ -454,7 +467,16 @@ function BarberAppointmentsView() {
         <DatePicker value={selectedDateObj} onChange={handleDateChange} className="h-8 w-[150px] text-xs" />
       </div>
 
-      <CheckInScanner onCheckIn={handleCheckIn} isCheckingIn={isCheckingIn} />
+      <CheckInScanner onCheckIn={handleCheckIn} isCheckingIn={isCheckingIn || !isOnline} />
+
+      {(!isOnline || isUsingCachedAppointments) && (
+        <div className="rounded-xl border border-amber-400/30 bg-amber-500/5 px-4 py-3 text-[12px] text-muted-foreground">
+          <span className="font-medium text-amber-600 dark:text-amber-400">Modo offline.</span>{" "}
+          Mostrando la última agenda guardada
+          {cachedAppointments ? ` (${new Date(cachedAppointments.savedAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })})` : ""}.
+          Los cambios se habilitan al recuperar conectividad.
+        </div>
+      )}
 
       <Card className="overflow-hidden">
         <CardContent className="p-0">
@@ -488,12 +510,12 @@ function BarberAppointmentsView() {
                   {(app.status === "scheduled" || app.status === "checked_in") && (
                     <div className="flex gap-2 shrink-0">
                       {app.status === "checked_in" && (
-                        <Button variant="outline" size="sm" className="h-8 text-[12px]" onClick={() => handleClose(app._id)}>
+                        <Button variant="outline" size="sm" className="h-8 text-[12px]" onClick={() => handleClose(app._id)} disabled={!isOnline}>
                           Finalizar
                         </Button>
                       )}
                       {app.status === "scheduled" && (
-                        <Button variant="destructive" size="sm" className="h-8 text-[12px]" onClick={() => setCancelId(app._id)}>
+                        <Button variant="destructive" size="sm" className="h-8 text-[12px]" onClick={() => setCancelId(app._id)} disabled={!isOnline}>
                           Cancelar
                         </Button>
                       )}
@@ -524,7 +546,7 @@ function BarberAppointmentsView() {
                 className="h-11 text-sm"
               />
             </div>
-            <Button variant="destructive" className="w-full h-11 text-sm font-medium" onClick={handleCancel}>
+            <Button variant="destructive" className="w-full h-11 text-sm font-medium" onClick={handleCancel} disabled={!isOnline}>
               Confirmar cancelación
             </Button>
           </div>

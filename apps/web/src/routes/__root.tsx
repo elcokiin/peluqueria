@@ -10,12 +10,14 @@ import {
 } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createServerFn } from "@tanstack/react-start";
+import { useEffect } from "react";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@v1_peluqueria/ui/components/theme-provider";
 import { useEffect } from "react";
 
 import { authClient } from "@/lib/auth-client";
 import { getToken } from "@/lib/auth-server";
+import { registerServiceWorker } from "@/lib/service-worker";
 
 import Header from "../components/header";
 import MobileNav from "../components/mobile-nav";
@@ -65,6 +67,11 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
   const context = useRouteContext({ from: Route.id });
+
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
   return (
     <html lang="es" suppressHydrationWarning>
       <head suppressHydrationWarning>

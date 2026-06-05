@@ -10,6 +10,8 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { useNetworkStatus } from "@/hooks/use-network-status";
+import { useOfflineQueryCache } from "@/hooks/use-offline-query-cache";
 import { Button } from "@v1_peluqueria/ui/components/button";
 import { Switch } from "@v1_peluqueria/ui/components/switch";
 import { Input } from "@v1_peluqueria/ui/components/input";
@@ -218,7 +220,11 @@ function BarberServicesTab() {
 
 // ─── Schedule Tab ─────────────────────────────────────────────────────────────
 function BarberScheduleTab() {
-  const schedule = useQuery(api.schedule.getMySchedule) || [];
+  const isOnline = useNetworkStatus();
+  const liveSchedule = useQuery(api.schedule.getMySchedule);
+  const cachedSchedule = useOfflineQueryCache("barber-weekly-schedule", liveSchedule);
+  const schedule = liveSchedule ?? cachedSchedule?.data ?? [];
+  const isUsingCachedSchedule = liveSchedule === undefined && cachedSchedule !== null;
   const upsertDay = useMutation(api.schedule.upsertScheduleDay);
   const deleteDay = useMutation(api.schedule.deleteScheduleDay);
 
@@ -232,6 +238,7 @@ function BarberScheduleTab() {
   const [globalBreakEnd, setGlobalBreakEnd] = useState("14:00");
 
   const handleToggle = async (dayOfWeek: number, isActive: boolean) => {
+    if (!isOnline) { toast.error("Sin conexión. El horario se sincroniza al recuperar internet."); return; }
     try {
       if (isActive) {
         await upsertDay({ dayOfWeek, startMinute: 480, endMinute: 1080, baseSlotInterval: 30 });
@@ -247,6 +254,7 @@ function BarberScheduleTab() {
 
   const saveConfig = async () => {
     if (editingDay === null) return;
+    if (!isOnline) { toast.error("Sin conexión. El horario se sincroniza al recuperar internet."); return; }
     const startMins = timeToMins(startClock);
     const endMins = timeToMins(endClock);
 
@@ -292,6 +300,7 @@ function BarberScheduleTab() {
 
   const removeBreak = async () => {
     if (editingDay === null) return;
+    if (!isOnline) { toast.error("Sin conexión. El horario se sincroniza al recuperar internet."); return; }
     const config = (schedule as any[]).find((s) => s.dayOfWeek === editingDay);
     if (!config) return;
     try {
@@ -312,6 +321,7 @@ function BarberScheduleTab() {
   };
 
   const applyGlobalBreak = async () => {
+    if (!isOnline) { toast.error("Sin conexión. El horario se sincroniza al recuperar internet."); return; }
     const active = (schedule as any[]);
     if (active.length === 0) { toast.warning("No tienes días laborables activos."); return; }
     if (!globalBreakStart || !globalBreakEnd) { toast.error("Define el inicio y fin del receso global."); return; }
@@ -340,6 +350,15 @@ function BarberScheduleTab() {
     <div className="space-y-4">
       <p className={sectionTitle}>Horario Semanal</p>
 
+      {(!isOnline || isUsingCachedSchedule) && (
+        <div className="rounded-xl border border-amber-400/30 bg-amber-500/5 px-4 py-3 text-[12px] text-muted-foreground">
+          <span className="font-medium text-amber-600 dark:text-amber-400">Modo offline.</span>{" "}
+          Mostrando el último horario semanal guardado
+          {cachedSchedule ? ` (${new Date(cachedSchedule.savedAt).toLocaleString("es-CO", { dateStyle: "short", timeStyle: "short" })})` : ""}.
+          La edición se habilita al recuperar conectividad.
+        </div>
+      )}
+
       {/* Day list */}
       <Card className="overflow-hidden">
         <CardContent className="p-0">
@@ -352,6 +371,7 @@ function BarberScheduleTab() {
                     checked={!!config}
                     onCheckedChange={(c) => handleToggle(idx, c)}
                     className="data-[state=checked]:bg-primary shrink-0"
+                    disabled={!isOnline}
                   />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium">{dayName}</p>
@@ -407,7 +427,7 @@ function BarberScheduleTab() {
             <Input type="time" value={globalBreakEnd} onChange={(e) => setGlobalBreakEnd(e.target.value)} className="h-9 text-sm" />
           </div>
         </div>
-        <Button variant="outline" size="sm" className="w-full text-[12px] border-amber-400/40 hover:bg-amber-500/10" onClick={applyGlobalBreak}>
+        <Button variant="outline" size="sm" className="w-full text-[12px] border-amber-400/40 hover:bg-amber-500/10" onClick={applyGlobalBreak} disabled={!isOnline}>
           Aplicar a todos los días activos
         </Button>
       </div>
@@ -465,7 +485,7 @@ function BarberScheduleTab() {
               </div>
             </div>
 
-            <Button className="w-full h-11 text-sm font-medium" onClick={saveConfig}>
+            <Button className="w-full h-11 text-sm font-medium" onClick={saveConfig} disabled={!isOnline}>
               Guardar horario
             </Button>
           </div>
