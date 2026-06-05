@@ -40,6 +40,26 @@ function assertValidDateString(date: string) {
     }
 }
 
+function getDatesBetween(startDate: string, endDate: string) {
+    assertValidDateString(startDate);
+    assertValidDateString(endDate);
+
+    const start = new Date(`${startDate}T00:00:00.000Z`);
+    const end = new Date(`${endDate}T00:00:00.000Z`);
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        throw new Error("Invalid date range");
+    }
+    if (start > end) throw new Error("startDate must be before or equal to endDate");
+
+    const dates: string[] = [];
+    const cursor = new Date(start);
+    while (cursor <= end) {
+        dates.push(cursor.toISOString().slice(0, 10));
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+    return dates;
+}
+
 function createCheckInCode() {
     return crypto.randomUUID();
 }
@@ -273,6 +293,83 @@ export const myAppointments = query({
         );
 
         return enriched.sort((a, b) => a.startTime - b.startTime);
+    },
+});
+
+/** Admin productivity report grouped by barber for a date range. */
+export const productivityReport = query({
+    args: {
+        startDate: v.string(),
+        endDate: v.string(),
+        barberId: v.optional(v.id("users")),
+    },
+    handler: async (ctx, args) => {
+        await requireAuth(ctx, "admin");
+        const dates = getDatesBetween(args.startDate, args.endDate);
+        if (dates.length > 62) {
+            throw new Error("Date range is too large for this report");
+        }
+
+        const allBarbers = await ctx.db
+            .query("users")
+            .filter((q) => q.or(q.eq(q.field("role"), "barber"), q.eq(q.field("role"), "admin")))
+            .collect();
+
+        const targetBarbers = args.barberId
+            ? allBarbers.filter((barber) => barber._id === args.barberId)
+            : allBarbers;
+
+        const rows = await Promise.all(
+            targetBarbers.map(async (barber) => {
+                const appointmentsByDate = await Promise.all(
+                    dates.map((date) =>
+                        ctx.db
+                            .query("appointments")
+                            .withIndex("by_barber_and_date", (q) =>
+                                q.eq("barberId", barber._id).eq("date", date)
+                            )
+                            .collect()
+                    )
+                );
+                const appointments = appointmentsByDate.flat();
+                const scheduledCount = appointments.filter(
+                    (appointment) => appointment.status === "scheduled" || appointment.status === "checked_in"
+                ).length;
+                const closedCount = appointments.filter((appointment) => appointment.status === "closed").length;
+                const cancelledCount = appointments.filter((appointment) => appointment.status === "cancelled").length;
+                const totalCount = appointments.length;
+
+                return {
+                    barberId: barber._id,
+                    barberName: barber.name || barber.email || "Barbero",
+                    barberEmail: barber.email,
+                    role: barber.role,
+                    isActive: barber.isActive !== false,
+                    scheduledCount,
+                    closedCount,
+                    cancelledCount,
+                    totalCount,
+                    cancellationRate: totalCount > 0 ? Math.round((cancelledCount / totalCount) * 1000) / 10 : 0,
+                };
+            })
+        );
+
+        rows.sort((a, b) => b.closedCount - a.closedCount || b.scheduledCount - a.scheduledCount || a.barberName.localeCompare(b.barberName));
+
+        return {
+            startDate: args.startDate,
+            endDate: args.endDate,
+            totals: rows.reduce(
+                (acc, row) => ({
+                    scheduledCount: acc.scheduledCount + row.scheduledCount,
+                    closedCount: acc.closedCount + row.closedCount,
+                    cancelledCount: acc.cancelledCount + row.cancelledCount,
+                    totalCount: acc.totalCount + row.totalCount,
+                }),
+                { scheduledCount: 0, closedCount: 0, cancelledCount: 0, totalCount: 0 }
+            ),
+            rows,
+        };
     },
 });
 
